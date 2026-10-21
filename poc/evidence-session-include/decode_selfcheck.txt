@@ -1,0 +1,1 @@
+string(41) "/home/wh1t3r0se/ph2s_chain/sess/sess_vc01"

@@ -1,0 +1,35 @@
+=== CHECK A: PHP 8.4.27 (patched build) ===
+CMD: /home/wh1t3r0se/ph2s_patch/build-27/sapi/cli/php /home/wh1t3r0se/php2shell_detect.php --no-exit --json
+{
+    "cve": [
+        "CVE-2026-109618",
+        "CVE-2026-109619"
+    ],
+    "php_version": "8.4.27",
+    "branch": "8.4",
+    "binary_has_fix_ini_key": true,
+    "version_map_verdict": "fixed-version",
+    "upload_progress_enabled": true,
+    "session_use_strict_mode": false,
+    "fatal_error_backtraces": null,
+    "verdict": "PATCHED",
+    "note": "Detective signals: INI key memory_hard_limit_percent (present only with fix commit 506e87fa7), plus fixed-release map and upload_progress\/fatal_error_backtraces risk modifiers."
+}
+
+=== CHECK B: PHP 8.4.4 (release lab build, unpatched) ===
+CMD: /home/wh1t3r0se/php2shell-lab/release/sapi/cli/php /home/wh1t3r0se/php2shell_detect.php --no-exit --json
+{
+    "cve": [
+        "CVE-2026-109618",
+        "CVE-2026-109619"
+    ],
+    "php_version": "8.4.4",
+    "branch": "8.4",
+    "binary_has_fix_ini_key": false,
+    "version_map_verdict": "affected-version",
+    "upload_progress_enabled": true,
+    "session_use_strict_mode": false,
+    "fatal_error_backtraces": null,
+    "verdict": "VULNERABLE",
+    "note": "Detective signals: INI key memory_hard_limit_percent (present only with fix commit 506e87fa7), plus fixed-release map and upload_progress\/fatal_error_backtraces risk modifiers."
+}

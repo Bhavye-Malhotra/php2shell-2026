@@ -1,0 +1,1213 @@
+(lldb) target create /home/wh1t3r0se/php2shell-lab/debug/sapi/cli/php
+Current executable set to '/home/wh1t3r0se/php2shell-lab/debug/sapi/cli/php' (x86_64).
+(lldb) command source -s 0 '/home/wh1t3r0se/php2shell-lab/lldb_probe12.txt'
+Executing commands in '/home/wh1t3r0se/php2shell-lab/lldb_probe12.txt'.
+(lldb) b -n php_var_serialize_init -C "expression (int)((int)puts(\"==INIT==\"), (int)fflush(stdout))" -C "p ::basic_globals.serialize.level" -C "p ::basic_globals.serialize.data" -C "p ::basic_globals.serialize_lock" -C "continue"
+Breakpoint 1: where = php`php_var_serialize_init + 8 at var.c:1329:6, address = 0x000000000050b1b3
+(lldb) b -n php_var_serialize_destroy -C "expression (int)((int)puts(\"==DESTROY==\"), (int)fflush(stdout))" -C "p ::basic_globals.serialize.level" -C "p ::basic_globals.serialize.data" -C "p ::basic_globals.serialize_lock" -C "continue"
+Breakpoint 2: where = php`php_var_serialize_destroy + 12 at var.c:1346:6, address = 0x000000000050b264
+(lldb) b -n _zend_bailout -C "expression (int)((int)puts(\"==BAILOUT==\"), (int)fflush(stdout))" -C "p ::basic_globals.serialize.level" -C "p ::basic_globals.serialize.data" -C "bt 4" -C "continue"
+Breakpoint 3: where = php`_zend_bailout + 15 at zend.c:1255:7, address = 0x000000000077b7f3
+(lldb) b -n php_session_rfc1867_update -C "expression (int)((int)puts(\"==RFC1867_UPDATE==\"), (int)fflush(stdout))" -C "p force_update" -C "continue"
+Breakpoint 4: where = php`php_session_rfc1867_update + 30 at session.c:3163:5, address = 0x00000000003ba666
+(lldb) b -n php_session_save_current_state -C "expression (int)((int)puts(\"==SAVE_STATE==\"), (int)fflush(stdout))" -C "p write" -C "p ::ps_globals.session_status" -C "p ::ps_globals.mod_data" -C "continue"
+Breakpoint 5: where = php`php_session_save_current_state + 11 at session.c:504:14, address = 0x00000000003b14c7
+(lldb) b -n php_session_initialize -C "expression (int)((int)puts(\"==SESS_INIT==\"), (int)fflush(stdout))" -C "p ::ps_globals.session_status" -C "p ::ps_globals.id" -C "continue"
+Breakpoint 6: where = php`php_session_initialize + 23 at session.c:409:15, address = 0x00000000003b1112
+(lldb) b -n ps_files_open -C "expression (int)((int)puts(\"==FILES_OPEN==\"), (int)fflush(stdout))" -C "p data->fd" -C "p data->last_key" -C "continue"
+Breakpoint 7: where = php`ps_files_open + 41 at mod_files.c:156:17, address = 0x00000000003bba5c
+(lldb) b -n ps_files_close -C "expression (int)((int)puts(\"==FILES_CLOSE==\"), (int)fflush(stdout))" -C "p data->fd" -C "continue"
+Breakpoint 8: where = php`ps_files_close + 12 at mod_files.c:141:10, address = 0x00000000003bba0b
+(lldb) b -n php_rshutdown_session_globals -C "expression (int)((int)puts(\"==RSUTDOWN_SESS==\"), (int)fflush(stdout))" -C "p ::ps_globals.mod_data" -C "p ::ps_globals.session_status" -C "continue"
+Breakpoint 9: where = php`php_rshutdown_session_globals + 26 at session.c:139:7, address = 0x00000000003b05ae
+(lldb) b -n ps_close_files -C "expression (int)((int)puts(\"==CLOSE_FILES==\"), (int)fflush(stdout))" -C "p data->fd" -C "continue"
+Breakpoint 10: where = php`ps_close_files + 12 at mod_files.c:440:2, address = 0x00000000003bc501
+(lldb) b -n php_session_abort -C "expression (int)((int)puts(\"==ABORT==\"), (int)fflush(stdout))" -C "p ::ps_globals.session_status" -C "p ::ps_globals.mod_data" -C "continue"
+Breakpoint 11: where = php`php_session_abort + 4 at session.c:1745:6, address = 0x00000000003b4dec
+(lldb) b -n php_rinit_session_globals -C "expression (int)((int)puts(\"==RINIT_SESS==\"), (int)fflush(stdout))" -C "p ::ps_globals.session_status" -C "p ::ps_globals.mod_data" -C "continue"
+Breakpoint 12: where = php`php_rinit_session_globals + 4 at session.c:112:9, address = 0x00000000003b04fd
+(lldb) b -n php_session_start -C "expression (int)((int)puts(\"==SESS_START==\"), (int)fflush(stdout))" -C "continue"
+Breakpoint 13: where = php`php_session_start + 8 at session.c:1618:10, address = 0x00000000003b482c
+(lldb) continue
+error: Command requires a current process.
+(lldb) process launch -- -S 127.0.0.1:8092 -t /home/wh1t3r0se/php2shell-lab/lldb_run -c /home/wh1t3r0se/php2shell-lab/lldb_run/lab.ini
+[Wed Oct 21 18:48:05 2026] PHP 8.4.4 Development Server (http://127.0.0.1:8092) started
+[Wed Oct 21 18:52:32 2026] 127.0.0.1:54316 Accepted
+[Wed Oct 21 18:52:32 2026] 127.0.0.1:54316 Closed without sending a request; it was probably just an unused speculative preconnection
+[Wed Oct 21 18:52:32 2026] 127.0.0.1:54316 Closing
+[Wed Oct 21 18:52:32 2026] 127.0.0.1:54326 Accepted
+==RINIT_SESS==
+(lldb)  expression (int)((int)puts("==RINIT_SESS=="), (int)fflush(stdout))
+(int) $0 = 0
+(lldb)  p ::ps_globals.session_status
+(php_session_status) php_session_none
+(lldb)  p ::ps_globals.mod_data
+(void *) 0x0000000000000000
+(lldb)  continue
+Process 59 resuming
+Command #4 'continue' continued the target.
+==RFC1867_UPDATE==
+(lldb)  expression (int)((int)puts("==RFC1867_UPDATE=="), (int)fflush(stdout))
+(int) $1 = 0
+(lldb)  p force_update
+(int) 0
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==SESS_INIT==
+(lldb)  expression (int)((int)puts("==SESS_INIT=="), (int)fflush(stdout))
+(int) $2 = 0
+(lldb)  p ::ps_globals.session_status
+(php_session_status) php_session_none
+(lldb)  p ::ps_globals.id
+(zend_string *) 0x00007ffff7a01200
+(lldb)  continue
+Process 59 resuming
+Command #4 'continue' continued the target.
+==FILES_OPEN==
+(lldb)  expression (int)((int)puts("==FILES_OPEN=="), (int)fflush(stdout))
+(int) $3 = 0
+(lldb)  p data->fd
+(int) -1
+(lldb)  p data->last_key
+(zend_string *) NULL
+(lldb)  continue
+Process 59 resuming
+Command #4 'continue' continued the target.
+==FILES_CLOSE==
+(lldb)  expression (int)((int)puts("==FILES_CLOSE=="), (int)fflush(stdout))
+(int) $4 = 0
+(lldb)  p data->fd
+(int) -1
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==SAVE_STATE==
+(lldb)  expression (int)((int)puts("==SAVE_STATE=="), (int)fflush(stdout))
+(int) $5 = 0
+(lldb)  p write
+(int) 1
+(lldb)  p ::ps_globals.session_status
+(php_session_status) php_session_active
+(lldb)  p ::ps_globals.mod_data
+(void *) 0x00007ffff7a03320
+(lldb)  continue
+Process 59 resuming
+Command #5 'continue' continued the target.
+==INIT==
+(lldb)  expression (int)((int)puts("==INIT=="), (int)fflush(stdout))
+(int) $6 = 0
+(lldb)  p ::basic_globals.serialize.level
+(unsigned int) 0
+(lldb)  p ::basic_globals.serialize.data
+(php_serialize_data *) NULL
+(lldb)  p ::basic_globals.serialize_lock
+(unsigned int) 0
+(lldb)  continue
+Process 59 resuming
+Command #5 'continue' continued the target.
+==DESTROY==
+(lldb)  expression (int)((int)puts("==DESTROY=="), (int)fflush(stdout))
+(int) $7 = 0
+(lldb)  p ::basic_globals.serialize.level
+(unsigned int) 1
+(lldb)  p ::basic_globals.serialize.data
+(php_serialize_data *) 0x00007ffff7a5c360
+(lldb)  p ::basic_globals.serialize_lock
+(unsigned int) 0
+(lldb)  continue
+Process 59 resuming
+Command #5 'continue' continued the target.
+==FILES_OPEN==
+(lldb)  expression (int)((int)puts("==FILES_OPEN=="), (int)fflush(stdout))
+(int) $8 = 0
+(lldb)  p data->fd
+(int) 5
+(lldb)  p data->last_key
+(zend_string *) 0x00007ffff7a01200
+(lldb)  continue
+Process 59 resuming
+Command #4 'continue' continued the target.
+==CLOSE_FILES==
+(lldb)  expression (int)((int)puts("==CLOSE_FILES=="), (int)fflush(stdout))
+(int) $9 = 0
+(lldb)  p data->fd
+(int) 1601401701
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==FILES_CLOSE==
+(lldb)  expression (int)((int)puts("==FILES_CLOSE=="), (int)fflush(stdout))
+(int) $10 = 0
+(lldb)  p data->fd
+(int) 5
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==RFC1867_UPDATE==
+(lldb)  expression (int)((int)puts("==RFC1867_UPDATE=="), (int)fflush(stdout))
+(int) $11 = 0
+(lldb)  p force_update
+(int) 0
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==RFC1867_UPDATE==
+(lldb)  expression (int)((int)puts("==RFC1867_UPDATE=="), (int)fflush(stdout))
+(int) $12 = 0
+(lldb)  p force_update
+(int) 0
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==RFC1867_UPDATE==
+(lldb)  expression (int)((int)puts("==RFC1867_UPDATE=="), (int)fflush(stdout))
+(int) $13 = 0
+(lldb)  p force_update
+(int) 0
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==RFC1867_UPDATE==
+(lldb)  expression (int)((int)puts("==RFC1867_UPDATE=="), (int)fflush(stdout))
+(int) $14 = 0
+(lldb)  p force_update
+(int) 0
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==RFC1867_UPDATE==
+(lldb)  expression (int)((int)puts("==RFC1867_UPDATE=="), (int)fflush(stdout))
+(int) $15 = 0
+(lldb)  p force_update
+(int) 0
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==RFC1867_UPDATE==
+(lldb)  expression (int)((int)puts("==RFC1867_UPDATE=="), (int)fflush(stdout))
+(int) $16 = 0
+(lldb)  p force_update
+(int) 0
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==RFC1867_UPDATE==
+(lldb)  expression (int)((int)puts("==RFC1867_UPDATE=="), (int)fflush(stdout))
+(int) $17 = 0
+(lldb)  p force_update
+(int) 0
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==RFC1867_UPDATE==
+(lldb)  expression (int)((int)puts("==RFC1867_UPDATE=="), (int)fflush(stdout))
+(int) $18 = 0
+(lldb)  p force_update
+(int) 0
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==RFC1867_UPDATE==
+(lldb)  expression (int)((int)puts("==RFC1867_UPDATE=="), (int)fflush(stdout))
+(int) $19 = 0
+(lldb)  p force_update
+(int) 0
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==RFC1867_UPDATE==
+(lldb)  expression (int)((int)puts("==RFC1867_UPDATE=="), (int)fflush(stdout))
+(int) $20 = 0
+(lldb)  p force_update
+(int) 0
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==RFC1867_UPDATE==
+(lldb)  expression (int)((int)puts("==RFC1867_UPDATE=="), (int)fflush(stdout))
+(int) $21 = 0
+(lldb)  p force_update
+(int) 0
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==RFC1867_UPDATE==
+(lldb)  expression (int)((int)puts("==RFC1867_UPDATE=="), (int)fflush(stdout))
+(int) $22 = 0
+(lldb)  p force_update
+(int) 0
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==RFC1867_UPDATE==
+(lldb)  expression (int)((int)puts("==RFC1867_UPDATE=="), (int)fflush(stdout))
+(int) $23 = 0
+(lldb)  p force_update
+(int) 0
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==RFC1867_UPDATE==
+(lldb)  expression (int)((int)puts("==RFC1867_UPDATE=="), (int)fflush(stdout))
+(int) $24 = 0
+(lldb)  p force_update
+(int) 0
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==RFC1867_UPDATE==
+(lldb)  expression (int)((int)puts("==RFC1867_UPDATE=="), (int)fflush(stdout))
+(int) $25 = 0
+(lldb)  p force_update
+(int) 0
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==RFC1867_UPDATE==
+(lldb)  expression (int)((int)puts("==RFC1867_UPDATE=="), (int)fflush(stdout))
+(int) $26 = 0
+(lldb)  p force_update
+(int) 0
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==RFC1867_UPDATE==
+(lldb)  expression (int)((int)puts("==RFC1867_UPDATE=="), (int)fflush(stdout))
+(int) $27 = 0
+(lldb)  p force_update
+(int) 0
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==RFC1867_UPDATE==
+(lldb)  expression (int)((int)puts("==RFC1867_UPDATE=="), (int)fflush(stdout))
+(int) $28 = 0
+(lldb)  p force_update
+(int) 0
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==RFC1867_UPDATE==
+(lldb)  expression (int)((int)puts("==RFC1867_UPDATE=="), (int)fflush(stdout))
+(int) $29 = 0
+(lldb)  p force_update
+(int) 0
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==RFC1867_UPDATE==
+(lldb)  expression (int)((int)puts("==RFC1867_UPDATE=="), (int)fflush(stdout))
+(int) $30 = 0
+(lldb)  p force_update
+(int) 0
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==RFC1867_UPDATE==
+(lldb)  expression (int)((int)puts("==RFC1867_UPDATE=="), (int)fflush(stdout))
+(int) $31 = 0
+(lldb)  p force_update
+(int) 0
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==RFC1867_UPDATE==
+(lldb)  expression (int)((int)puts("==RFC1867_UPDATE=="), (int)fflush(stdout))
+(int) $32 = 0
+(lldb)  p force_update
+(int) 0
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==RFC1867_UPDATE==
+(lldb)  expression (int)((int)puts("==RFC1867_UPDATE=="), (int)fflush(stdout))
+(int) $33 = 0
+(lldb)  p force_update
+(int) 0
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==RFC1867_UPDATE==
+(lldb)  expression (int)((int)puts("==RFC1867_UPDATE=="), (int)fflush(stdout))
+(int) $34 = 0
+(lldb)  p force_update
+(int) 0
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==RFC1867_UPDATE==
+(lldb)  expression (int)((int)puts("==RFC1867_UPDATE=="), (int)fflush(stdout))
+(int) $35 = 0
+(lldb)  p force_update
+(int) 0
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==RFC1867_UPDATE==
+(lldb)  expression (int)((int)puts("==RFC1867_UPDATE=="), (int)fflush(stdout))
+(int) $36 = 0
+(lldb)  p force_update
+(int) 0
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==RFC1867_UPDATE==
+(lldb)  expression (int)((int)puts("==RFC1867_UPDATE=="), (int)fflush(stdout))
+(int) $37 = 0
+(lldb)  p force_update
+(int) 0
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==RFC1867_UPDATE==
+(lldb)  expression (int)((int)puts("==RFC1867_UPDATE=="), (int)fflush(stdout))
+(int) $38 = 0
+(lldb)  p force_update
+(int) 0
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==RFC1867_UPDATE==
+(lldb)  expression (int)((int)puts("==RFC1867_UPDATE=="), (int)fflush(stdout))
+(int) $39 = 0
+(lldb)  p force_update
+(int) 0
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==RFC1867_UPDATE==
+(lldb)  expression (int)((int)puts("==RFC1867_UPDATE=="), (int)fflush(stdout))
+(int) $40 = 0
+(lldb)  p force_update
+(int) 0
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==RFC1867_UPDATE==
+(lldb)  expression (int)((int)puts("==RFC1867_UPDATE=="), (int)fflush(stdout))
+(int) $41 = 0
+(lldb)  p force_update
+(int) 0
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==RFC1867_UPDATE==
+(lldb)  expression (int)((int)puts("==RFC1867_UPDATE=="), (int)fflush(stdout))
+(int) $42 = 0
+(lldb)  p force_update
+(int) 0
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==RFC1867_UPDATE==
+(lldb)  expression (int)((int)puts("==RFC1867_UPDATE=="), (int)fflush(stdout))
+(int) $43 = 0
+(lldb)  p force_update
+(int) 0
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==RFC1867_UPDATE==
+(lldb)  expression (int)((int)puts("==RFC1867_UPDATE=="), (int)fflush(stdout))
+(int) $44 = 0
+(lldb)  p force_update
+(int) 0
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==RFC1867_UPDATE==
+(lldb)  expression (int)((int)puts("==RFC1867_UPDATE=="), (int)fflush(stdout))
+(int) $45 = 0
+(lldb)  p force_update
+(int) 0
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==RFC1867_UPDATE==
+(lldb)  expression (int)((int)puts("==RFC1867_UPDATE=="), (int)fflush(stdout))
+(int) $46 = 0
+(lldb)  p force_update
+(int) 0
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==RFC1867_UPDATE==
+(lldb)  expression (int)((int)puts("==RFC1867_UPDATE=="), (int)fflush(stdout))
+(int) $47 = 0
+(lldb)  p force_update
+(int) 0
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==SESS_INIT==
+(lldb)  expression (int)((int)puts("==SESS_INIT=="), (int)fflush(stdout))
+(int) $48 = 0
+(lldb)  p ::ps_globals.session_status
+(php_session_status) php_session_none
+(lldb)  p ::ps_globals.id
+(zend_string *) 0x00007ffff7a01200
+(lldb)  continue
+Process 59 resuming
+Command #4 'continue' continued the target.
+==FILES_OPEN==
+(lldb)  expression (int)((int)puts("==FILES_OPEN=="), (int)fflush(stdout))
+(int) $49 = 0
+(lldb)  p data->fd
+(int) -1
+(lldb)  p data->last_key
+(zend_string *) NULL
+(lldb)  continue
+Process 59 resuming
+Command #4 'continue' continued the target.
+==FILES_CLOSE==
+(lldb)  expression (int)((int)puts("==FILES_CLOSE=="), (int)fflush(stdout))
+(int) $50 = 0
+(lldb)  p data->fd
+(int) -1
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==SAVE_STATE==
+(lldb)  expression (int)((int)puts("==SAVE_STATE=="), (int)fflush(stdout))
+(int) $51 = 0
+(lldb)  p write
+(int) 1
+(lldb)  p ::ps_globals.session_status
+(php_session_status) php_session_active
+(lldb)  p ::ps_globals.mod_data
+(void *) 0x00007ffff7bfb730
+(lldb)  continue
+Process 59 resuming
+Command #5 'continue' continued the target.
+==INIT==
+(lldb)  expression (int)((int)puts("==INIT=="), (int)fflush(stdout))
+(int) $52 = 0
+(lldb)  p ::basic_globals.serialize.level
+(unsigned int) 0
+(lldb)  p ::basic_globals.serialize.data
+(php_serialize_data *) NULL
+(lldb)  p ::basic_globals.serialize_lock
+(unsigned int) 0
+(lldb)  continue
+Process 59 resuming
+Command #5 'continue' continued the target.
+==BAILOUT==
+(lldb)  expression (int)((int)puts("==BAILOUT=="), (int)fflush(stdout))
+(int) $53 = 0
+(lldb)  p ::basic_globals.serialize.level
+(unsigned int) 1
+(lldb)  p ::basic_globals.serialize.data
+(php_serialize_data *) 0x00007ffff7bfd600
+(lldb)  bt 4
+* thread #1, name = 'php', stop reason = breakpoint 3.1
+   * frame #0: 0x0000555555b7b7f3 php`_zend_bailout(filename="/home/wh1t3r0se/php-8.4.4/main/main.c", lineno=1467) at zend.c:1255:7
+     frame #1: 0x000055555592181c php`php_error_cb(orig_type=1, error_filename=0x0000555556030af0, error_lineno=0, message=0x00007ffff7a710c0) at main.c:1467:6
+     frame #2: 0x0000555555b7bf2e php`zend_error_zstr_at(orig_type=1, error_filename=0x0000555556030af0, error_lineno=0, message=0x00007ffff7a710c0) at zend.c:1495:3
+     frame #3: 0x0000555555b7c599 php`zend_error_va_list(orig_type=1, error_filename=0x0000555556030af0, error_lineno=0, format="Allowed memory size of %zu bytes exhausted at %s:%d (tried to allocate %zu bytes)", args=0x00007fffffff8d70) at zend.c:1597:2
+(lldb)  continue
+Process 59 resuming
+Command #5 'continue' continued the target.
+==BAILOUT==
+(lldb)  expression (int)((int)puts("==BAILOUT=="), (int)fflush(stdout))
+(int) $54 = 0
+(lldb)  p ::basic_globals.serialize.level
+(unsigned int) 1
+(lldb)  p ::basic_globals.serialize.data
+(php_serialize_data *) 0x00007ffff7bfd600
+(lldb)  bt 4
+* thread #1, name = 'php', stop reason = breakpoint 3.1
+   * frame #0: 0x0000555555b7b7f3 php`_zend_bailout(filename="/home/wh1t3r0se/php-8.4.4/Zend/zend_alloc.c", lineno=424) at zend.c:1255:7
+     frame #1: 0x00005555559cdad4 php`zend_mm_safe_error(heap=0x00007ffff7a00040, format="Allowed memory size of %zu bytes exhausted at %s:%d (tried to allocate %zu bytes)", limit=16777216, filename="/home/wh1t3r0se/php-8.4.4/Zend/zend_smart_str.c", lineno=40, size=2101216) at zend_alloc.c:424:2
+     frame #2: 0x00005555559d0b35 php`zend_mm_alloc_huge(heap=0x00007ffff7a00040, size=2101216, __zend_filename="/home/wh1t3r0se/php-8.4.4/Zend/zend_smart_str.c", __zend_lineno=40, __zend_orig_filename=0x0000000000000000, __zend_orig_lineno=0) at zend_alloc.c:1941:4
+     frame #3: 0x00005555559cfa6f php`zend_mm_alloc_heap(heap=0x00007ffff7a00040, size=2101216, __zend_filename="/home/wh1t3r0se/php-8.4.4/Zend/zend_smart_str.c", __zend_lineno=40, __zend_orig_filename=0x0000000000000000, __zend_orig_lineno=0) at zend_alloc.c:1513:10
+(lldb)  continue
+Process 59 resuming
+Command #5 'continue' continued the target.
+[Wed Oct 21 18:52:33 2026] 127.0.0.1:54326 Closing
+[Wed Oct 21 18:52:35 2026] 127.0.0.1:54328 Accepted
+==RINIT_SESS==
+(lldb)  expression (int)((int)puts("==RINIT_SESS=="), (int)fflush(stdout))
+(int) $55 = 0
+(lldb)  p ::ps_globals.session_status
+(php_session_status) php_session_active
+(lldb)  p ::ps_globals.mod_data
+(void *) 0x00007ffff7bfb730
+(lldb)  continue
+Process 59 resuming
+Command #4 'continue' continued the target.
+==RFC1867_UPDATE==
+(lldb)  expression (int)((int)puts("==RFC1867_UPDATE=="), (int)fflush(stdout))
+(int) $56 = 0
+(lldb)  p force_update
+(int) 0
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==SESS_INIT==
+(lldb)  expression (int)((int)puts("==SESS_INIT=="), (int)fflush(stdout))
+(int) $57 = 0
+(lldb)  p ::ps_globals.session_status
+(php_session_status) php_session_none
+(lldb)  p ::ps_globals.id
+(zend_string *) 0x00007ffff7a5c1c0
+(lldb)  continue
+Process 59 resuming
+Command #4 'continue' continued the target.
+==FILES_OPEN==
+(lldb)  expression (int)((int)puts("==FILES_OPEN=="), (int)fflush(stdout))
+(int) $58 = 0
+(lldb)  p data->fd
+(int) -1
+(lldb)  p data->last_key
+(zend_string *) NULL
+(lldb)  continue
+Process 59 resuming
+Command #4 'continue' continued the target.
+==FILES_CLOSE==
+(lldb)  expression (int)((int)puts("==FILES_CLOSE=="), (int)fflush(stdout))
+(int) $59 = 0
+(lldb)  p data->fd
+(int) -1
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==SAVE_STATE==
+(lldb)  expression (int)((int)puts("==SAVE_STATE=="), (int)fflush(stdout))
+(int) $60 = 0
+(lldb)  p write
+(int) 1
+(lldb)  p ::ps_globals.session_status
+(php_session_status) php_session_active
+(lldb)  p ::ps_globals.mod_data
+(void *) 0x00007ffff7a02370
+(lldb)  continue
+Process 59 resuming
+Command #5 'continue' continued the target.
+==INIT==
+(lldb)  expression (int)((int)puts("==INIT=="), (int)fflush(stdout))
+(int) $61 = 0
+(lldb)  p ::basic_globals.serialize.level
+(unsigned int) 1
+(lldb)  p ::basic_globals.serialize.data
+(php_serialize_data *) 0x00007ffff7bfd600
+(lldb)  p ::basic_globals.serialize_lock
+(unsigned int) 0
+(lldb)  continue
+Process 59 resuming
+Command #5 'continue' continued the target.
+==DESTROY==
+(lldb)  expression (int)((int)puts("==DESTROY=="), (int)fflush(stdout))
+(int) $62 = 0
+(lldb)  p ::basic_globals.serialize.level
+(unsigned int) 2
+(lldb)  p ::basic_globals.serialize.data
+(php_serialize_data *) 0x00007ffff7bfd600
+(lldb)  p ::basic_globals.serialize_lock
+(unsigned int) 0
+(lldb)  continue
+Process 59 resuming
+Command #5 'continue' continued the target.
+==FILES_OPEN==
+(lldb)  expression (int)((int)puts("==FILES_OPEN=="), (int)fflush(stdout))
+(int) $63 = 0
+(lldb)  p data->fd
+(int) 7
+(lldb)  p data->last_key
+(zend_string *) 0x00007ffff7a5c1c0
+(lldb)  continue
+Process 59 resuming
+Command #4 'continue' continued the target.
+==CLOSE_FILES==
+(lldb)  expression (int)((int)puts("==CLOSE_FILES=="), (int)fflush(stdout))
+(int) $64 = 0
+(lldb)  p data->fd
+(int) 1601401701
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==FILES_CLOSE==
+(lldb)  expression (int)((int)puts("==FILES_CLOSE=="), (int)fflush(stdout))
+(int) $65 = 0
+(lldb)  p data->fd
+(int) 7
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==RFC1867_UPDATE==
+(lldb)  expression (int)((int)puts("==RFC1867_UPDATE=="), (int)fflush(stdout))
+(int) $66 = 0
+(lldb)  p force_update
+(int) 0
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==RFC1867_UPDATE==
+(lldb)  expression (int)((int)puts("==RFC1867_UPDATE=="), (int)fflush(stdout))
+(int) $67 = 0
+(lldb)  p force_update
+(int) 0
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==SESS_INIT==
+(lldb)  expression (int)((int)puts("==SESS_INIT=="), (int)fflush(stdout))
+(int) $68 = 0
+(lldb)  p ::ps_globals.session_status
+(php_session_status) php_session_none
+(lldb)  p ::ps_globals.id
+(zend_string *) 0x00007ffff7a5c1c0
+(lldb)  continue
+Process 59 resuming
+Command #4 'continue' continued the target.
+==FILES_OPEN==
+(lldb)  expression (int)((int)puts("==FILES_OPEN=="), (int)fflush(stdout))
+(int) $69 = 0
+(lldb)  p data->fd
+(int) -1
+(lldb)  p data->last_key
+(zend_string *) NULL
+(lldb)  continue
+Process 59 resuming
+Command #4 'continue' continued the target.
+==FILES_CLOSE==
+(lldb)  expression (int)((int)puts("==FILES_CLOSE=="), (int)fflush(stdout))
+(int) $70 = 0
+(lldb)  p data->fd
+(int) -1
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==SAVE_STATE==
+(lldb)  expression (int)((int)puts("==SAVE_STATE=="), (int)fflush(stdout))
+(int) $71 = 0
+(lldb)  p write
+(int) 1
+(lldb)  p ::ps_globals.session_status
+(php_session_status) php_session_active
+(lldb)  p ::ps_globals.mod_data
+(void *) 0x00007ffff7a020a0
+(lldb)  continue
+Process 59 resuming
+Command #5 'continue' continued the target.
+==INIT==
+(lldb)  expression (int)((int)puts("==INIT=="), (int)fflush(stdout))
+(int) $72 = 0
+(lldb)  p ::basic_globals.serialize.level
+(unsigned int) 1
+(lldb)  p ::basic_globals.serialize.data
+(php_serialize_data *) 0x00007ffff7bfd600
+(lldb)  p ::basic_globals.serialize_lock
+(unsigned int) 0
+(lldb)  continue
+Process 59 resuming
+Command #5 'continue' continued the target.
+==DESTROY==
+(lldb)  expression (int)((int)puts("==DESTROY=="), (int)fflush(stdout))
+(int) $73 = 0
+(lldb)  p ::basic_globals.serialize.level
+(unsigned int) 2
+(lldb)  p ::basic_globals.serialize.data
+(php_serialize_data *) 0x00007ffff7bfd600
+(lldb)  p ::basic_globals.serialize_lock
+(unsigned int) 0
+(lldb)  continue
+Process 59 resuming
+Command #5 'continue' continued the target.
+==FILES_OPEN==
+(lldb)  expression (int)((int)puts("==FILES_OPEN=="), (int)fflush(stdout))
+(int) $74 = 0
+(lldb)  p data->fd
+(int) 7
+(lldb)  p data->last_key
+(zend_string *) 0x00007ffff7a5c1c0
+(lldb)  continue
+Process 59 resuming
+Command #4 'continue' continued the target.
+==CLOSE_FILES==
+(lldb)  expression (int)((int)puts("==CLOSE_FILES=="), (int)fflush(stdout))
+(int) $75 = 0
+(lldb)  p data->fd
+(int) 7
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==FILES_CLOSE==
+(lldb)  expression (int)((int)puts("==FILES_CLOSE=="), (int)fflush(stdout))
+(int) $76 = 0
+(lldb)  p data->fd
+(int) 7
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==RSUTDOWN_SESS==
+(lldb)  expression (int)((int)puts("==RSUTDOWN_SESS=="), (int)fflush(stdout))
+(int) $77 = 0
+(lldb)  p ::ps_globals.mod_data
+(void *) 0x0000000000000000
+(lldb)  p ::ps_globals.session_status
+(php_session_status) php_session_none
+(lldb)  continue
+Process 59 resuming
+Command #4 'continue' continued the target.
+==RINIT_SESS==
+(lldb)  expression (int)((int)puts("==RINIT_SESS=="), (int)fflush(stdout))
+(int) $78 = 0
+(lldb)  p ::ps_globals.session_status
+(php_session_status) php_session_none
+(lldb)  p ::ps_globals.mod_data
+(void *) 0x0000000000000000
+(lldb)  continue
+Process 59 resuming
+Command #4 'continue' continued the target.
+==SESS_START==
+(lldb)  expression (int)((int)puts("==SESS_START=="), (int)fflush(stdout))
+(int) $79 = 0
+(lldb)  continue
+Process 59 resuming
+Command #2 'continue' continued the target.
+==SESS_INIT==
+(lldb)  expression (int)((int)puts("==SESS_INIT=="), (int)fflush(stdout))
+(int) $80 = 0
+(lldb)  p ::ps_globals.session_status
+(php_session_status) php_session_none
+(lldb)  p ::ps_globals.id
+(zend_string *) NULL
+(lldb)  continue
+Process 59 resuming
+Command #4 'continue' continued the target.
+==FILES_OPEN==
+(lldb)  expression (int)((int)puts("==FILES_OPEN=="), (int)fflush(stdout))
+(int) $81 = 0
+(lldb)  p data->fd
+(int) -1
+(lldb)  p data->last_key
+(zend_string *) NULL
+(lldb)  continue
+Process 59 resuming
+Command #4 'continue' continued the target.
+==FILES_CLOSE==
+(lldb)  expression (int)((int)puts("==FILES_CLOSE=="), (int)fflush(stdout))
+(int) $82 = 0
+(lldb)  p data->fd
+(int) -1
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+[Wed Oct 21 18:52:36 2026] 127.0.0.1:54328 [200]: POST /?sid=key2
+==SAVE_STATE==
+(lldb)  expression (int)((int)puts("==SAVE_STATE=="), (int)fflush(stdout))
+(int) $83 = 0
+(lldb)  p write
+(int) 1
+(lldb)  p ::ps_globals.session_status
+(php_session_status) php_session_active
+(lldb)  p ::ps_globals.mod_data
+(void *) 0x00007ffff7a02000
+(lldb)  continue
+Process 59 resuming
+Command #5 'continue' continued the target.
+==INIT==
+(lldb)  expression (int)((int)puts("==INIT=="), (int)fflush(stdout))
+(int) $84 = 0
+(lldb)  p ::basic_globals.serialize.level
+(unsigned int) 0
+(lldb)  p ::basic_globals.serialize.data
+(php_serialize_data *) NULL
+(lldb)  p ::basic_globals.serialize_lock
+(unsigned int) 0
+(lldb)  continue
+Process 59 resuming
+Command #5 'continue' continued the target.
+==DESTROY==
+(lldb)  expression (int)((int)puts("==DESTROY=="), (int)fflush(stdout))
+(int) $85 = 0
+(lldb)  p ::basic_globals.serialize.level
+(unsigned int) 1
+(lldb)  p ::basic_globals.serialize.data
+(php_serialize_data *) 0x00007ffff7a5a180
+(lldb)  p ::basic_globals.serialize_lock
+(unsigned int) 0
+(lldb)  continue
+Process 59 resuming
+Command #5 'continue' continued the target.
+==FILES_OPEN==
+(lldb)  expression (int)((int)puts("==FILES_OPEN=="), (int)fflush(stdout))
+(int) $86 = 0
+(lldb)  p data->fd
+(int) 8
+(lldb)  p data->last_key
+(zend_string *) 0x00007ffff7a5a240
+(lldb)  continue
+Process 59 resuming
+Command #4 'continue' continued the target.
+==CLOSE_FILES==
+(lldb)  expression (int)((int)puts("==CLOSE_FILES=="), (int)fflush(stdout))
+(int) $87 = 0
+(lldb)  p data->fd
+(int) 8
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==FILES_CLOSE==
+(lldb)  expression (int)((int)puts("==FILES_CLOSE=="), (int)fflush(stdout))
+(int) $88 = 0
+(lldb)  p data->fd
+(int) 8
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==RSUTDOWN_SESS==
+(lldb)  expression (int)((int)puts("==RSUTDOWN_SESS=="), (int)fflush(stdout))
+(int) $89 = 0
+(lldb)  p ::ps_globals.mod_data
+(void *) 0x0000000000000000
+(lldb)  p ::ps_globals.session_status
+(php_session_status) php_session_none
+(lldb)  continue
+Process 59 resuming
+Command #4 'continue' continued the target.
+[Wed Oct 21 18:52:36 2026] 127.0.0.1:54328 Closing
+[Wed Oct 21 18:52:38 2026] 127.0.0.1:54332 Accepted
+==RINIT_SESS==
+(lldb)  expression (int)((int)puts("==RINIT_SESS=="), (int)fflush(stdout))
+(int) $90 = 0
+(lldb)  p ::ps_globals.session_status
+(php_session_status) php_session_none
+(lldb)  p ::ps_globals.mod_data
+(void *) 0x0000000000000000
+(lldb)  continue
+Process 59 resuming
+Command #4 'continue' continued the target.
+==RFC1867_UPDATE==
+(lldb)  expression (int)((int)puts("==RFC1867_UPDATE=="), (int)fflush(stdout))
+(int) $91 = 0
+(lldb)  p force_update
+(int) 0
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==SESS_INIT==
+(lldb)  expression (int)((int)puts("==SESS_INIT=="), (int)fflush(stdout))
+(int) $92 = 0
+(lldb)  p ::ps_globals.session_status
+(php_session_status) php_session_none
+(lldb)  p ::ps_globals.id
+(zend_string *) 0x00007ffff7a5c1c0
+(lldb)  continue
+Process 59 resuming
+Command #4 'continue' continued the target.
+==FILES_OPEN==
+(lldb)  expression (int)((int)puts("==FILES_OPEN=="), (int)fflush(stdout))
+(int) $93 = 0
+(lldb)  p data->fd
+(int) -1
+(lldb)  p data->last_key
+(zend_string *) NULL
+(lldb)  continue
+Process 59 resuming
+Command #4 'continue' continued the target.
+==FILES_CLOSE==
+(lldb)  expression (int)((int)puts("==FILES_CLOSE=="), (int)fflush(stdout))
+(int) $94 = 0
+(lldb)  p data->fd
+(int) -1
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==SAVE_STATE==
+(lldb)  expression (int)((int)puts("==SAVE_STATE=="), (int)fflush(stdout))
+(int) $95 = 0
+(lldb)  p write
+(int) 1
+(lldb)  p ::ps_globals.session_status
+(php_session_status) php_session_active
+(lldb)  p ::ps_globals.mod_data
+(void *) 0x00007ffff7a02370
+(lldb)  continue
+Process 59 resuming
+Command #5 'continue' continued the target.
+==INIT==
+(lldb)  expression (int)((int)puts("==INIT=="), (int)fflush(stdout))
+(int) $96 = 0
+(lldb)  p ::basic_globals.serialize.level
+(unsigned int) 0
+(lldb)  p ::basic_globals.serialize.data
+(php_serialize_data *) NULL
+(lldb)  p ::basic_globals.serialize_lock
+(unsigned int) 0
+(lldb)  continue
+Process 59 resuming
+Command #5 'continue' continued the target.
+==DESTROY==
+(lldb)  expression (int)((int)puts("==DESTROY=="), (int)fflush(stdout))
+(int) $97 = 0
+(lldb)  p ::basic_globals.serialize.level
+(unsigned int) 1
+(lldb)  p ::basic_globals.serialize.data
+(php_serialize_data *) 0x00007ffff7a5a360
+(lldb)  p ::basic_globals.serialize_lock
+(unsigned int) 0
+(lldb)  continue
+Process 59 resuming
+Command #5 'continue' continued the target.
+==FILES_OPEN==
+(lldb)  expression (int)((int)puts("==FILES_OPEN=="), (int)fflush(stdout))
+(int) $98 = 0
+(lldb)  p data->fd
+(int) 7
+(lldb)  p data->last_key
+(zend_string *) 0x00007ffff7a5c1c0
+(lldb)  continue
+Process 59 resuming
+Command #4 'continue' continued the target.
+==CLOSE_FILES==
+(lldb)  expression (int)((int)puts("==CLOSE_FILES=="), (int)fflush(stdout))
+(int) $99 = 0
+(lldb)  p data->fd
+(int) 1601401701
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==FILES_CLOSE==
+(lldb)  expression (int)((int)puts("==FILES_CLOSE=="), (int)fflush(stdout))
+(int) $100 = 0
+(lldb)  p data->fd
+(int) 7
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==RFC1867_UPDATE==
+(lldb)  expression (int)((int)puts("==RFC1867_UPDATE=="), (int)fflush(stdout))
+(int) $101 = 0
+(lldb)  p force_update
+(int) 0
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==RFC1867_UPDATE==
+(lldb)  expression (int)((int)puts("==RFC1867_UPDATE=="), (int)fflush(stdout))
+(int) $102 = 0
+(lldb)  p force_update
+(int) 0
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==SESS_INIT==
+(lldb)  expression (int)((int)puts("==SESS_INIT=="), (int)fflush(stdout))
+(int) $103 = 0
+(lldb)  p ::ps_globals.session_status
+(php_session_status) php_session_none
+(lldb)  p ::ps_globals.id
+(zend_string *) 0x00007ffff7a5c1c0
+(lldb)  continue
+Process 59 resuming
+Command #4 'continue' continued the target.
+==FILES_OPEN==
+(lldb)  expression (int)((int)puts("==FILES_OPEN=="), (int)fflush(stdout))
+(int) $104 = 0
+(lldb)  p data->fd
+(int) -1
+(lldb)  p data->last_key
+(zend_string *) NULL
+(lldb)  continue
+Process 59 resuming
+Command #4 'continue' continued the target.
+==FILES_CLOSE==
+(lldb)  expression (int)((int)puts("==FILES_CLOSE=="), (int)fflush(stdout))
+(int) $105 = 0
+(lldb)  p data->fd
+(int) -1
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==SAVE_STATE==
+(lldb)  expression (int)((int)puts("==SAVE_STATE=="), (int)fflush(stdout))
+(int) $106 = 0
+(lldb)  p write
+(int) 1
+(lldb)  p ::ps_globals.session_status
+(php_session_status) php_session_active
+(lldb)  p ::ps_globals.mod_data
+(void *) 0x00007ffff7a020a0
+(lldb)  continue
+Process 59 resuming
+Command #5 'continue' continued the target.
+==INIT==
+(lldb)  expression (int)((int)puts("==INIT=="), (int)fflush(stdout))
+(int) $107 = 0
+(lldb)  p ::basic_globals.serialize.level
+(unsigned int) 0
+(lldb)  p ::basic_globals.serialize.data
+(php_serialize_data *) NULL
+(lldb)  p ::basic_globals.serialize_lock
+(unsigned int) 0
+(lldb)  continue
+Process 59 resuming
+Command #5 'continue' continued the target.
+==DESTROY==
+(lldb)  expression (int)((int)puts("==DESTROY=="), (int)fflush(stdout))
+(int) $108 = 0
+(lldb)  p ::basic_globals.serialize.level
+(unsigned int) 1
+(lldb)  p ::basic_globals.serialize.data
+(php_serialize_data *) 0x00007ffff7a5a480
+(lldb)  p ::basic_globals.serialize_lock
+(unsigned int) 0
+(lldb)  continue
+Process 59 resuming
+Command #5 'continue' continued the target.
+==FILES_OPEN==
+(lldb)  expression (int)((int)puts("==FILES_OPEN=="), (int)fflush(stdout))
+(int) $109 = 0
+(lldb)  p data->fd
+(int) 7
+(lldb)  p data->last_key
+(zend_string *) 0x00007ffff7a5c1c0
+(lldb)  continue
+Process 59 resuming
+Command #4 'continue' continued the target.
+==CLOSE_FILES==
+(lldb)  expression (int)((int)puts("==CLOSE_FILES=="), (int)fflush(stdout))
+(int) $110 = 0
+(lldb)  p data->fd
+(int) 7
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==FILES_CLOSE==
+(lldb)  expression (int)((int)puts("==FILES_CLOSE=="), (int)fflush(stdout))
+(int) $111 = 0
+(lldb)  p data->fd
+(int) 7
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==RSUTDOWN_SESS==
+(lldb)  expression (int)((int)puts("==RSUTDOWN_SESS=="), (int)fflush(stdout))
+(int) $112 = 0
+(lldb)  p ::ps_globals.mod_data
+(void *) 0x0000000000000000
+(lldb)  p ::ps_globals.session_status
+(php_session_status) php_session_none
+(lldb)  continue
+Process 59 resuming
+Command #4 'continue' continued the target.
+==RINIT_SESS==
+(lldb)  expression (int)((int)puts("==RINIT_SESS=="), (int)fflush(stdout))
+(int) $113 = 0
+(lldb)  p ::ps_globals.session_status
+(php_session_status) php_session_none
+(lldb)  p ::ps_globals.mod_data
+(void *) 0x0000000000000000
+(lldb)  continue
+Process 59 resuming
+Command #4 'continue' continued the target.
+==SESS_START==
+(lldb)  expression (int)((int)puts("==SESS_START=="), (int)fflush(stdout))
+(int) $114 = 0
+(lldb)  continue
+Process 59 resuming
+Command #2 'continue' continued the target.
+==SESS_INIT==
+(lldb)  expression (int)((int)puts("==SESS_INIT=="), (int)fflush(stdout))
+(int) $115 = 0
+(lldb)  p ::ps_globals.session_status
+(php_session_status) php_session_none
+(lldb)  p ::ps_globals.id
+(zend_string *) NULL
+(lldb)  continue
+Process 59 resuming
+Command #4 'continue' continued the target.
+==FILES_OPEN==
+(lldb)  expression (int)((int)puts("==FILES_OPEN=="), (int)fflush(stdout))
+(int) $116 = 0
+(lldb)  p data->fd
+(int) -1
+(lldb)  p data->last_key
+(zend_string *) NULL
+(lldb)  continue
+Process 59 resuming
+Command #4 'continue' continued the target.
+==FILES_CLOSE==
+(lldb)  expression (int)((int)puts("==FILES_CLOSE=="), (int)fflush(stdout))
+(int) $117 = 0
+(lldb)  p data->fd
+(int) -1
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+[Wed Oct 21 18:52:38 2026] 127.0.0.1:54332 [200]: POST /?sid=key3
+==SAVE_STATE==
+(lldb)  expression (int)((int)puts("==SAVE_STATE=="), (int)fflush(stdout))
+(int) $118 = 0
+(lldb)  p write
+(int) 1
+(lldb)  p ::ps_globals.session_status
+(php_session_status) php_session_active
+(lldb)  p ::ps_globals.mod_data
+(void *) 0x00007ffff7a02000
+(lldb)  continue
+Process 59 resuming
+Command #5 'continue' continued the target.
+==INIT==
+(lldb)  expression (int)((int)puts("==INIT=="), (int)fflush(stdout))
+(int) $119 = 0
+(lldb)  p ::basic_globals.serialize.level
+(unsigned int) 0
+(lldb)  p ::basic_globals.serialize.data
+(php_serialize_data *) NULL
+(lldb)  p ::basic_globals.serialize_lock
+(unsigned int) 0
+(lldb)  continue
+Process 59 resuming
+Command #5 'continue' continued the target.
+==DESTROY==
+(lldb)  expression (int)((int)puts("==DESTROY=="), (int)fflush(stdout))
+(int) $120 = 0
+(lldb)  p ::basic_globals.serialize.level
+(unsigned int) 1
+(lldb)  p ::basic_globals.serialize.data
+(php_serialize_data *) 0x00007ffff7a5a180
+(lldb)  p ::basic_globals.serialize_lock
+(unsigned int) 0
+(lldb)  continue
+Process 59 resuming
+Command #5 'continue' continued the target.
+==FILES_OPEN==
+(lldb)  expression (int)((int)puts("==FILES_OPEN=="), (int)fflush(stdout))
+(int) $121 = 0
+(lldb)  p data->fd
+(int) 8
+(lldb)  p data->last_key
+(zend_string *) 0x00007ffff7a5a240
+(lldb)  continue
+Process 59 resuming
+Command #4 'continue' continued the target.
+==CLOSE_FILES==
+(lldb)  expression (int)((int)puts("==CLOSE_FILES=="), (int)fflush(stdout))
+(int) $122 = 0
+(lldb)  p data->fd
+(int) 8
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==FILES_CLOSE==
+(lldb)  expression (int)((int)puts("==FILES_CLOSE=="), (int)fflush(stdout))
+(int) $123 = 0
+(lldb)  p data->fd
+(int) 8
+(lldb)  continue
+Process 59 resuming
+Command #3 'continue' continued the target.
+==RSUTDOWN_SESS==
+(lldb)  expression (int)((int)puts("==RSUTDOWN_SESS=="), (int)fflush(stdout))
+(int) $124 = 0
+(lldb)  p ::ps_globals.mod_data
+(void *) 0x0000000000000000
+(lldb)  p ::ps_globals.session_status
+(php_session_status) php_session_none
+(lldb)  continue
+Process 59 resuming
+Command #4 'continue' continued the target.
+[Wed Oct 21 18:52:39 2026] 127.0.0.1:54332 Closing

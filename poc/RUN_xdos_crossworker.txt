@@ -1,0 +1,21 @@
+[lab] base=/home/wh1t3r0se/ph2s_xdos php=/home/wh1t3r0se/php2shell-lab/release/sapi/cli/php
+[lab] php: PHP 8.4.4 (cli) (built: Oct 21 2026 14:31:53) (NTS)
+[lab] stale workers killed, sess/ cleaned
+[boot] worker port=8110 pid=126 ready
+[boot] worker port=8111 pid=131 ready
+[boot] worker A master=126 children=[127, 128, 129, 130]
+[boot] worker B master=131 children=[132, 133, 134, 135]
+[poison] body_bytes=5245826 file_parts=20 filename_len=262144
+[poison] answered status=200 bytes=151 in 0.06s (unexpected but continuing)
+[leak] sess_vic exists=True
+[leak] sess_vic dev=2096 ino=680218
+[leak] OPEN_FD pid=126 fd=6 target=/home/wh1t3r0se/ph2s_xdos/sess/sess_vic ino=680218
+VERDICT A_LEAKED_FD=True
+[locks] 1: FLOCK  ADVISORY  WRITE 126 08:30:680218 0 EOF
+[locks] A_WRITE_LOCK_IN_PROC_LOCKS=True
+[B/vic] outcome=aborted:TimeoutError dt=12.01s status=None body=timed out
+VERDICT B_SAMESID_BLOCKED=True
+[B/innocent] outcome=answered dt=0.00s status=200 body=b'OK'
+VERDICT B_INNOCENT_NEARINSTANT=True
+OVERALL_DEMONSTRATED=True
+[teardown] both workers killed

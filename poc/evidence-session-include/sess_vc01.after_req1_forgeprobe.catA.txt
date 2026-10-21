@@ -1,0 +1,2 @@
+size=423
+a:1:{s:78:"upload_progress_x|a:0:{}page|s:41:"/home/wh1t3r0se/ph2s_chain/sess/sess_vc01";";a:5:{s:10:"start_time";i:1792595005;s:14:"content_length";i:274;s:15:"bytes_processed";i:274;s:4:"done";b:1;s:5:"files";a:1:{i:0;a:7:{s:10:"field_name";s:2:"f1";s:4:"name";s:9:"dummy.txt";s:8:"tmp_name";s:27:"/tmp/phpo5gmq65ul9ki8p3sSEF";s:5:"error";i:0;s:4:"done";b:1;s:10:"start_time";i:1792595005;s:15:"bytes_processed";i:16;}}}}

@@ -1,0 +1,377 @@
+{
+  "ghsa_id": "GHSA-w8hw-w9fx-j79w",
+  "cve_id": "CVE-2026-109618",
+  "url": "https://api.github.com/repos/php/php-src/security-advisories/GHSA-w8hw-w9fx-j79w",
+  "html_url": "https://github.com/php/php-src/security/advisories/GHSA-w8hw-w9fx-j79w",
+  "summary": "RCE via OOM corruption",
+  "description": "## Summary\r\n\r\nPHP uses `longjmp()` for out-of-memory (OOM) errors to exit the current context and abort handling of the request. In some contexts, request memory is temporarily reachable before it is fully initialized. If any allocation fails at that point, PHP does not properly account for the early exit and leaves the request memory in an invalid state. The failed allocation does not need to be related to the invalid memory. The request shutdown procedure may then read or branch on it. Multiple OOM strategies can consistently trigger this condition and lead to remote code execution (RCE).\r\n\r\n## Vulnerability\r\n\r\n### OOM strategies\r\n\r\nSeveral multipart parsing problems can let a request reach OOM while remaining within its apparent PHP limits:\r\n\r\n- A multipart request without a usable declared content length may pass the initial `post_max_size` check and continue supplying decoded body data.\r\n- A multipart part can contain an unrestricted number of headers. Representing these headers inside PHP can use substantially more memory than their wire representation, allowing a request within `post_max_size` to exhaust the normal `memory_limit`.\r\n- Empty file controls do not count towards `max_file_uploads` but still create the normal file metadata arrays. Nested field names multiply the generated array work.\r\n\r\nOOM can also be reached in application-specific ways when attacker-controlled input causes a sufficiently large allocation or repeated memory use.\r\n\r\n### Susceptibility\r\n\r\nApache mod_php unconditionally invokes the request shutdown procedure, even when request startup has failed. During request startup, automatic body parsing can exhaust the configured memory limit and exit the request in a context where state is temporarily invalid. Shutdown then processes this invalid state. This happens entirely before any application-specific code begins execution.\r\n\r\nFPM exits the child when request startup fails. This prevents consumption of the invalid state and removes the child from the pool. After normal startup, OOM may still be reached in a context failing to account for an early exit, with the invalid state being processed during request shutdown. Source analysis therefore supports FPM as a susceptible, though no complete FPM exploit has been demonstrated for this SAPI.\r\n\r\nSource analysis indicates that FrankenPHP, analogous to Apache mod_php, calls the request shutdown procedure unconditionally, making it likely susceptible to application-independent attacks. LSAPI models FPM, with application-specific exploits being likely but unvalidated.\r\n\r\n## Mitigation\r\n\r\nThe patch removes `longjmp()` for OOM, avoiding an early exit out of contexts that do not properly account for it. It is replaced with a delayed, graceful soft OOM triggered at the next VM safe point, and an immediate hard OOM using `_exit()` if memory consumption reaches a second, higher threshold. The shutdown procedure will no longer see invalid state, and PHP's normal ability to limit memory consumption is retained.\r\n\r\n> [!WARNING]\r\n> Updating to a PHP release containing the patch to this vulnerability is the _only_ complete mitigation.\r\n\r\nFor installations that cannot update, setting and enforcing `memory_limit=-1` administratively is the primary configuration mitigation. It removes the predictable per-request limit that enables the confirmed exploit with a controllable OOM. This is not a complete mitigation. If `mmap()` or another underlying allocation fails, PHP can still use `longjmp()` while incomplete request memory is reachable. Restart every PHP worker and confirm that no pool, directory or application setting restores a finite PHP memory limit.\r\n\r\nKeep `post_max_size` conservative and independently enforce the decoded request size at the frontend. Reduce `max_input_nesting_level`, and bound the number of input variables, multipart parts, headers within each part and uploads. These controls reduce hard OOM and denial of service risk even after applying the patch, but do not replace updating. If the application does not use multipart form data, block such requests at the frontend before they reach PHP.\r\n\r\nA container or cgroup memory limit (`memory.max`) may provide an alternative to PHP's own `memory_limit` with some limitations. It is not guaranteed to prevent allocation failure and is not a complete mitigation. For example, killing a container or cgroup can also kill the master and every worker, unless each worker has its own group. Killing one FPM child fails only its current requests and FPM's master replaces it quickly. Do _not_ use `RLIMIT_AS` or `RLIMIT_DATA`, as these will cause `mmap()` to fail once the memory limit is reached, triggering the vulnerable `longjmp()` path.\r\n\r\n**Important**: Make sure to also follow the remediation advice from the related report.\r\nhttps://github.com/php/php-src/security/advisories/GHSA-6wmf-4rv5-p3rp\r\n\r\n## Impact and reliability\r\n\r\nThe confirmed impact is unauthenticated remote code execution as the web worker account. Complete remote code execution was validated over HTTP against mod_php with default PHP input and memory limits and normal prefork configurations with multiple workers. Additional workers and unrelated traffic can increase the required number of attempts but do not remove the condition. Exploit portability and reliability depend on the PHP build, extensions, frontend behavior and allocator layout.\r\n",
+  "severity": "critical",
+  "author": null,
+  "publisher": {
+    "login": "bukka",
+    "id": 137594,
+    "node_id": "MDQ6VXNlcjEzNzU5NA==",
+    "avatar_url": "https://avatars.githubusercontent.com/u/137594?v=4",
+    "gravatar_id": "",
+    "url": "https://api.github.com/users/bukka",
+    "html_url": "https://github.com/bukka",
+    "followers_url": "https://api.github.com/users/bukka/followers",
+    "following_url": "https://api.github.com/users/bukka/following{/other_user}",
+    "gists_url": "https://api.github.com/users/bukka/gists{/gist_id}",
+    "starred_url": "https://api.github.com/users/bukka/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/bukka/subscriptions",
+    "organizations_url": "https://api.github.com/users/bukka/orgs",
+    "repos_url": "https://api.github.com/users/bukka/repos",
+    "events_url": "https://api.github.com/users/bukka/events{/privacy}",
+    "received_events_url": "https://api.github.com/users/bukka/received_events",
+    "type": "User",
+    "user_view_type": "public",
+    "site_admin": false
+  },
+  "identifiers": [
+    {
+      "value": "GHSA-w8hw-w9fx-j79w",
+      "type": "GHSA"
+    },
+    {
+      "value": "CVE-2026-109618",
+      "type": "CVE"
+    }
+  ],
+  "state": "published",
+  "created_at": null,
+  "updated_at": "2026-10-21T13:34:25Z",
+  "published_at": "2026-10-21T13:34:25Z",
+  "closed_at": null,
+  "withdrawn_at": null,
+  "submission": null,
+  "vulnerabilities": [
+    {
+      "package": {
+        "ecosystem": "php",
+        "name": "php-src"
+      },
+      "vulnerable_version_range": "< 8.2.35",
+      "patched_versions": "8.2.35",
+      "vulnerable_functions": [
+
+      ]
+    },
+    {
+      "package": {
+        "ecosystem": "php",
+        "name": "php-src"
+      },
+      "vulnerable_version_range": "< 8.3.36",
+      "patched_versions": "8.3.36",
+      "vulnerable_functions": [
+
+      ]
+    },
+    {
+      "package": {
+        "ecosystem": "php",
+        "name": "php-src"
+      },
+      "vulnerable_version_range": "< 8.4.27",
+      "patched_versions": "8.4.27",
+      "vulnerable_functions": [
+
+      ]
+    },
+    {
+      "package": {
+        "ecosystem": "php",
+        "name": "php-src"
+      },
+      "vulnerable_version_range": "< 8.5.12",
+      "patched_versions": "8.5.12",
+      "vulnerable_functions": [
+
+      ]
+    }
+  ],
+  "cvss_severities": {
+    "cvss_v3": {
+      "vector_string": null,
+      "score": null
+    },
+    "cvss_v4": {
+      "vector_string": "CVSS:4.0/AV:N/AC:H/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N",
+      "score": 9.2
+    }
+  },
+  "cwes": [
+    {
+      "cwe_id": "CWE-416",
+      "name": "Use After Free"
+    },
+    {
+      "cwe_id": "CWE-755",
+      "name": "Improper Handling of Exceptional Conditions"
+    },
+    {
+      "cwe_id": "CWE-824",
+      "name": "Access of Uninitialized Pointer"
+    },
+    {
+      "cwe_id": "CWE-1325",
+      "name": "Improperly Controlled Sequential Memory Allocation"
+    },
+    {
+      "cwe_id": "CWE-1419",
+      "name": "Incorrect Initialization of Resource"
+    }
+  ],
+  "cwe_ids": [
+    "CWE-416",
+    "CWE-755",
+    "CWE-824",
+    "CWE-1325",
+    "CWE-1419"
+  ],
+  "credits": [
+    {
+      "login": "lcfr-hax",
+      "type": "reporter"
+    },
+    {
+      "login": "sagitzadik-wiz",
+      "type": "reporter"
+    },
+    {
+      "login": "tomash-areion",
+      "type": "reporter"
+    },
+    {
+      "login": "amyb-oai",
+      "type": "reporter"
+    },
+    {
+      "login": "arnaud-lb",
+      "type": "remediation_developer"
+    },
+    {
+      "login": "iluuu1994",
+      "type": "remediation_developer"
+    },
+    {
+      "login": "bukka",
+      "type": "remediation_developer"
+    },
+    {
+      "login": "ndossche",
+      "type": "remediation_developer"
+    }
+  ],
+  "credits_detailed": [
+    {
+      "user": {
+        "login": "lcfr-hax",
+        "id": 62533238,
+        "node_id": "MDQ6VXNlcjYyNTMzMjM4",
+        "avatar_url": "https://avatars.githubusercontent.com/u/62533238?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/lcfr-hax",
+        "html_url": "https://github.com/lcfr-hax",
+        "followers_url": "https://api.github.com/users/lcfr-hax/followers",
+        "following_url": "https://api.github.com/users/lcfr-hax/following{/other_user}",
+        "gists_url": "https://api.github.com/users/lcfr-hax/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/lcfr-hax/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/lcfr-hax/subscriptions",
+        "organizations_url": "https://api.github.com/users/lcfr-hax/orgs",
+        "repos_url": "https://api.github.com/users/lcfr-hax/repos",
+        "events_url": "https://api.github.com/users/lcfr-hax/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/lcfr-hax/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "type": "reporter",
+      "state": "accepted"
+    },
+    {
+      "user": {
+        "login": "sagitzadik-wiz",
+        "id": 87936429,
+        "node_id": "MDQ6VXNlcjg3OTM2NDI5",
+        "avatar_url": "https://avatars.githubusercontent.com/u/87936429?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/sagitzadik-wiz",
+        "html_url": "https://github.com/sagitzadik-wiz",
+        "followers_url": "https://api.github.com/users/sagitzadik-wiz/followers",
+        "following_url": "https://api.github.com/users/sagitzadik-wiz/following{/other_user}",
+        "gists_url": "https://api.github.com/users/sagitzadik-wiz/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/sagitzadik-wiz/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/sagitzadik-wiz/subscriptions",
+        "organizations_url": "https://api.github.com/users/sagitzadik-wiz/orgs",
+        "repos_url": "https://api.github.com/users/sagitzadik-wiz/repos",
+        "events_url": "https://api.github.com/users/sagitzadik-wiz/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/sagitzadik-wiz/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "type": "reporter",
+      "state": "accepted"
+    },
+    {
+      "user": {
+        "login": "tomash-areion",
+        "id": 77932180,
+        "node_id": "MDQ6VXNlcjc3OTMyMTgw",
+        "avatar_url": "https://avatars.githubusercontent.com/u/77932180?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/tomash-areion",
+        "html_url": "https://github.com/tomash-areion",
+        "followers_url": "https://api.github.com/users/tomash-areion/followers",
+        "following_url": "https://api.github.com/users/tomash-areion/following{/other_user}",
+        "gists_url": "https://api.github.com/users/tomash-areion/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/tomash-areion/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/tomash-areion/subscriptions",
+        "organizations_url": "https://api.github.com/users/tomash-areion/orgs",
+        "repos_url": "https://api.github.com/users/tomash-areion/repos",
+        "events_url": "https://api.github.com/users/tomash-areion/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/tomash-areion/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "type": "reporter",
+      "state": "accepted"
+    },
+    {
+      "user": {
+        "login": "amyb-oai",
+        "id": 256202057,
+        "node_id": "U_kgDOD0VVSQ",
+        "avatar_url": "https://avatars.githubusercontent.com/u/256202057?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/amyb-oai",
+        "html_url": "https://github.com/amyb-oai",
+        "followers_url": "https://api.github.com/users/amyb-oai/followers",
+        "following_url": "https://api.github.com/users/amyb-oai/following{/other_user}",
+        "gists_url": "https://api.github.com/users/amyb-oai/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/amyb-oai/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/amyb-oai/subscriptions",
+        "organizations_url": "https://api.github.com/users/amyb-oai/orgs",
+        "repos_url": "https://api.github.com/users/amyb-oai/repos",
+        "events_url": "https://api.github.com/users/amyb-oai/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/amyb-oai/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "type": "reporter",
+      "state": "accepted"
+    },
+    {
+      "user": {
+        "login": "arnaud-lb",
+        "id": 365207,
+        "node_id": "MDQ6VXNlcjM2NTIwNw==",
+        "avatar_url": "https://avatars.githubusercontent.com/u/365207?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/arnaud-lb",
+        "html_url": "https://github.com/arnaud-lb",
+        "followers_url": "https://api.github.com/users/arnaud-lb/followers",
+        "following_url": "https://api.github.com/users/arnaud-lb/following{/other_user}",
+        "gists_url": "https://api.github.com/users/arnaud-lb/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/arnaud-lb/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/arnaud-lb/subscriptions",
+        "organizations_url": "https://api.github.com/users/arnaud-lb/orgs",
+        "repos_url": "https://api.github.com/users/arnaud-lb/repos",
+        "events_url": "https://api.github.com/users/arnaud-lb/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/arnaud-lb/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "type": "remediation_developer",
+      "state": "accepted"
+    },
+    {
+      "user": {
+        "login": "iluuu1994",
+        "id": 1752683,
+        "node_id": "MDQ6VXNlcjE3NTI2ODM=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/1752683?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/iluuu1994",
+        "html_url": "https://github.com/iluuu1994",
+        "followers_url": "https://api.github.com/users/iluuu1994/followers",
+        "following_url": "https://api.github.com/users/iluuu1994/following{/other_user}",
+        "gists_url": "https://api.github.com/users/iluuu1994/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/iluuu1994/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/iluuu1994/subscriptions",
+        "organizations_url": "https://api.github.com/users/iluuu1994/orgs",
+        "repos_url": "https://api.github.com/users/iluuu1994/repos",
+        "events_url": "https://api.github.com/users/iluuu1994/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/iluuu1994/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "type": "remediation_developer",
+      "state": "accepted"
+    },
+    {
+      "user": {
+        "login": "bukka",
+        "id": 137594,
+        "node_id": "MDQ6VXNlcjEzNzU5NA==",
+        "avatar_url": "https://avatars.githubusercontent.com/u/137594?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/bukka",
+        "html_url": "https://github.com/bukka",
+        "followers_url": "https://api.github.com/users/bukka/followers",
+        "following_url": "https://api.github.com/users/bukka/following{/other_user}",
+        "gists_url": "https://api.github.com/users/bukka/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/bukka/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/bukka/subscriptions",
+        "organizations_url": "https://api.github.com/users/bukka/orgs",
+        "repos_url": "https://api.github.com/users/bukka/repos",
+        "events_url": "https://api.github.com/users/bukka/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/bukka/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "type": "remediation_developer",
+      "state": "accepted"
+    },
+    {
+      "user": {
+        "login": "ndossche",
+        "id": 7771979,
+        "node_id": "MDQ6VXNlcjc3NzE5Nzk=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/7771979?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/ndossche",
+        "html_url": "https://github.com/ndossche",
+        "followers_url": "https://api.github.com/users/ndossche/followers",
+        "following_url": "https://api.github.com/users/ndossche/following{/other_user}",
+        "gists_url": "https://api.github.com/users/ndossche/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/ndossche/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/ndossche/subscriptions",
+        "organizations_url": "https://api.github.com/users/ndossche/orgs",
+        "repos_url": "https://api.github.com/users/ndossche/repos",
+        "events_url": "https://api.github.com/users/ndossche/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/ndossche/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "type": "remediation_developer",
+      "state": "accepted"
+    }
+  ],
+  "collaborating_users": null,
+  "collaborating_teams": null,
+  "private_fork": null,
+  "comments": 6,
+  "cvss": {
+    "vector_string": null,
+    "score": null
+  }
+}

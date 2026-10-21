@@ -1,0 +1,13 @@
+[Wed Oct 21 20:33:25 2026] PHP 8.4.4 Development Server (http://127.0.0.1:8106) started
+[Wed Oct 21 20:33:25 2026] 127.0.0.1:55592 Accepted
+[Wed Oct 21 20:33:25 2026] 127.0.0.1:55592 Closed without sending a request; it was probably just an unused speculative preconnection
+[Wed Oct 21 20:33:25 2026] 127.0.0.1:55592 Closing
+[Wed Oct 21 20:33:25 2026] 127.0.0.1:55596 Accepted
+[Wed Oct 21 20:33:25 2026] 127.0.0.1:55596 [200]: POST /index.php
+[Wed Oct 21 20:33:25 2026] 127.0.0.1:55596 Closing
+[Wed Oct 21 20:33:26 2026] 127.0.0.1:55610 Accepted
+[Wed Oct 21 20:33:26 2026] 127.0.0.1:55610 [200]: POST /index.php
+[Wed Oct 21 20:33:26 2026] 127.0.0.1:55610 Closing
+[Wed Oct 21 20:33:26 2026] 127.0.0.1:55622 Accepted
+[Wed Oct 21 20:33:26 2026] 127.0.0.1:55622 [200]: GET /index.php?c=id
+[Wed Oct 21 20:33:26 2026] 127.0.0.1:55622 Closing

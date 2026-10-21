@@ -1,0 +1,6 @@
+### cross-worker flock DoS — evidence capture Wed Oct 21 01:56:32 PM UTC 2026
+--- /proc/1358/fd entry for sess_xworker1792590932:
+lrwx------ 1 wh1t3r0se wh1t3r0se 64 Oct 21 19:25 /proc/1358/fd/10 -> /home/wh1t3r0se/php2shell-lab/final_demo/sess/sess_xworker1792590932
+--- /proc/locks entries for pid 1358:
+--- flock info for inode of sess_xworker1792590932:
+inode=652680 /home/wh1t3r0se/php2shell-lab/final_demo/sess/sess_xworker1792590932

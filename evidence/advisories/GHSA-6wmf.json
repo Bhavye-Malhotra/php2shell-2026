@@ -1,0 +1,377 @@
+{
+  "ghsa_id": "GHSA-6wmf-4rv5-p3rp",
+  "cve_id": "CVE-2026-109619",
+  "url": "https://api.github.com/repos/php/php-src/security-advisories/GHSA-6wmf-4rv5-p3rp",
+  "html_url": "https://github.com/php/php-src/security/advisories/GHSA-6wmf-4rv5-p3rp",
+  "summary": "RCE via stale global state",
+  "description": "## Summary\r\n\r\nPHP contains various global state, such as error, session, object and extension state that is retained by a worker but points to memory owned by one request. That state must be reset before the request memory is released. Some input, configuration, session and error handling operations run before normal initialization of the next request. They inadvertently access stale state not reset by the previous request before initialization has a chance to replace it, causing a use after free. A strategically crafted heap layout can produce full remote code execution (RCE).\r\n\r\nState can survive for more than one reason. A fatal error, including one caused by memory exhaustion, can abandon an operation before it performs its matching reset. A warning or other nonfatal diagnostic can also repopulate error state after that state was already cleared during shutdown. The request heap is then freed while the worker global field still refers to it. A later operation that runs before normal request initialization can consume the stale value.\r\n\r\nSuccessful exploitation of this vulnerability requires both a producer and a consumer. The producer is a PHP operation that stores state owned by one request in a location PHP can access later in a subsequent request. The consumer is a subsequent PHP operation that reads, frees, branches or otherwise acts on the stale state previously stored by the producer.\r\n\r\nA concrete vulnerability would arise under the following conditions:\r\n\r\n1. A reachable PHP operation stores request-owned state in a globally accessible location, acting as the producer.\r\n2. The state is not reset, or another operation repopulates it after its normal reset.\r\n3. PHP releases the request memory while the persistent worker retains the referring global state.\r\n4. The same worker handles another request.\r\n5. A PHP operation reads, frees, branches or otherwise acts on the stale state before normal request initialization resets it, acting as the consumer.\r\n\r\nThe demonstrated producing and consuming operations occur in different HTTP requests handled by the same worker. The exact affected versions, configuration and mitigations depend on the internal state affected by the producing operation.\r\n\r\n## Vulnerability\r\n\r\n### Producers\r\n\r\nA producing operation becomes dangerous when its request-owned state remains published after the request heap is freed. A fatal error can cause this by abandoning the operation before it resets the state. Fatal interruptions include parse and compile failures, uncaught errors, failure of `require`, and `Maximum execution time exceeded`.\r\n\r\nOOM can provide the same interruption when an affected error, exception, object or extension state was already published.\r\n\r\nEven a nonfatal diagnostic from extension or server cleanup during a later shutdown stage can repopulate new request-owned error information to the global state.\r\n\r\n### Consumers\r\n\r\nThere are two confirmed consumers before normal initialization.\r\n\r\n#### INI diagnostics before request initialization\r\n\r\nA warning, notice or deprecation during initialization can consume stale error state. It does not need to be fatal, displayed or logged. Such a warning may be raised when applying invalid or deprecated INI settings before ordinary executor initialization. Examples include:\r\n\r\n- Deterministic deprecations such as `auto_detect_line_endings=1`, a `filter.default` value other than the default, PHP 8.3+ legacy `assert.*` settings, PHP 8.4+ legacy session settings, and PHP 8.5 `report_memleaks=0` or nonzero `intl.error_level`.\r\n- Explicitly configured `mbstring.http_input`, `mbstring.http_output`, `mbstring.internal_encoding`, `iconv.input_encoding`, `iconv.output_encoding` or `iconv.internal_encoding`.\r\n- Invalid or conflicting `zend.assertions`, `memory_limit`, `date.timezone`, DBA, EXIF, mail, OpenSSL, zlib and loaded extension values.\r\n- Malformed or overflowing quantities, including invalid `memory_limit`, body size, input, timeout, stack and extension values on PHP 8.2+.\r\n- Configured log, mail, session or SOAP cache paths rejected under `open_basedir`.\r\n\r\nGlobal state is accessed before PHP decides whether to report, display or log the warning. Changing `error_reporting`, using `@`, or disabling `display_errors` or `log_errors` does not protect against this vulnerability.\r\n\r\n##### Reachability\r\n\r\nWith Apache mod_php, `.htaccess` and Apache `php_value`/`php_flag`/`php_admin_*` directory configuration is applied before `php_request_startup()`. Normal `php.ini` is startup configuration and is not reapplied as a consumer across requests.\r\n\r\nFPM is conditionally exposed when nginx, Apache `mod_proxy_fcgi` or another frontend sends `PHP_VALUE`/`PHP_ADMIN_VALUE` parameters that produce a diagnostic before request initialization. FPM pool values are applied when a worker starts, and `.user.ini` is applied after normal initialization. They do not provide the same early consumer. FPM also exits a child after `php_request_startup()` returns failure.\r\n\r\nLSAPI can apply special environment INI values early and is a conditional candidate. An equivalent early configuration consumer was not established in the default configuration of FrankenPHP. This does not make this environment immune. It may expose different consumers through application or extension behavior.\r\n\r\n#### Session upload progress before normal initialization\r\n\r\nSession upload progress can reach session handling before ordinary session initialization. It can therefore consume session or decoder state left by an interrupted request before normal initialization resets it. This consumer is independent of the INI diagnostic path and does not require a diagnostic from configuration.\r\n\r\n## Concrete and candidate cases\r\n\r\n### PHP 8.5 fatal error backtrace: confirmed\r\n\r\nWith `fatal_error_backtraces` enabled, fatal error reporting stores backtrace state owned by the request. Resetting of this global state is always missed during shutdown. A diagnostic on a subsequent request reaches the stale value before normal request initialization resets it.\r\n\r\nThis is the strongest demonstrated case and is the basis of the confirmed mod_php exploitation.\r\n\r\n### Session upload progress lifecycle: confirmed\r\n\r\nAn upload can initialize request-owned session and decoding state before normal module initialization. OOM or another fatal error after that state has been published can prevent its matching reset. PHP then frees the request heap while persistent session or decoder globals still refer to it. A later upload progress operation reaches those globals before ordinary initialization and treats them as valid state.\r\n\r\nThe demonstrated application-independent trigger is OOM during input processing. Other fatal errors at this stage can cause the same state transition, but generally require additional application, extension or configuration conditions.\r\n\r\nWith mod_php, both the producing operation and fatal error can occur during multipart startup. FPM terminates a child when this startup fails, so that exact sequence does not survive. The validated FPM path instead publishes state during application execution after successful startup, reaches a fatal error, and then uses session upload progress as the early consumer. It works with a normal dynamic FPM pool, although it depends on a suitable application operation.\r\n\r\nSession upload progress is enabled by default, and no application call to `session_start()` is required. It can supply a producer, consumer or both, but exploitation still requires an interruption after state is published and a subsequent request handled by the same worker.\r\n\r\n### Other error, exception, object and extension state: conditional\r\n\r\nSupported PHP branches contain other request state that may become unsafe after a request boundary. The complete patch resets this wider state because it must not survive into operations that precede normal initialization. Whether it is reachable depends on the application, extensions and the exact point where the state was published.\r\n\r\nFatal errors inside PHP operations that call back into an application deserve particular attention. The callback may introduce a fatal error while the operation still has temporary state. Applicability depends on a route reachable by an attacker, the callbacks registered by that application or extension, and a later consumer before normal request initialization. There is no configuration based mitigation that covers every such operation.\r\n\r\n## Mitigation\r\n\r\n> [!WARNING]\r\n> Updating to a release containing the complete state reset patch is the only reliable mitigation. **There is no complete generic configuration mitigation as an application, extension or server path may publish stale state or consume it without a predictable log entry.**\r\n\r\nFor PHP 8.5 installations that cannot update, set `fatal_error_backtraces=0` administratively and restart every worker. This removes the producer used by the confirmed RCE case. It does not cover other request-owned global or extension state.\r\n\r\nFor the session lifecycle case, set `session.upload_progress.enabled=0` administratively and restart every worker. This prevents the demonstrated early session producing and consuming operations. It does not mitigate the other lifecycle paths. It might be prudent to set `session.upload_progress.enabled=0` if you don't need this feature even after applying the patch, as more attackers try to find flaws in this hardly-used and hardly-tested feature.\r\n\r\nReduce the remaining risk by breaking as many links in the lifecycle as possible:\r\n\r\n1. Eliminate fatal errors on paths reachable by an attacker. Include failures that depend on request flow in upload, import, error page, shutdown, destructor, serialization, output handler, plugin and extension paths rather than only failures seen during ordinary page requests.\r\n2. Eliminate warnings and other diagnostics emitted during extension post-deactivation and server cleanup, after normal request error state has already been cleared.\r\n3. Eliminate diagnostics from all INI configuration applied before request initialization. Prefer `php.ini`, FPM pool or server configuration applied at startup over per request overrides, and remove obsolete directives.\r\n4. If performance is not a factor, consider limiting the number of requests a worker may execute using `pm.max_requests=1`.\r\n\r\nA PHP execution timeout should be treated like another fatal error. Prevent attacker controlled requests from predictably reaching `Maximum execution time exceeded` while PHP is inside an affected operation. Changing the time limit only removes that possible interruption and does not mitigate the other cases.\r\n\r\n### Logging and configuration audit\r\n\r\nEnable `log_errors=On`, a functional `error_log`, and `error_reporting=E_ALL` in startup configuration during an isolated audit. Review Apache, PHP-FPM, reverse proxy and service logs for:\r\n\r\n- Warnings, deprecations and core errors repeated before target scripts run.\r\n- Warnings and other diagnostics produced during extension or server cleanup.\r\n- Fatal, parse and uncaught error messages.\r\n- `Maximum execution time exceeded`.\r\n- Failures restricted to routes, content types, files, callback implementations or plugin options controlled by an attacker.\r\n\r\nFixing observed errors reduces exposure, but absence of an error in logs is not proof of safety. Historical logs may have been collected with deprecations or other relevant severities excluded. Even an audit using `E_ALL` only covers the routes and application states that were exercised. A failure may also happen before PHP writes the message. Logs must supplement a static configuration and application flow audit.\r\n\r\n**Important**: Make sure to also follow the remediation advice from the related report.\r\nhttps://github.com/php/php-src/security/advisories/GHSA-w8hw-w9fx-j79w\r\n\r\n## Impact and reliability\r\n\r\nThe confirmed impact is unauthenticated heap use-after-free, memory disclosure and remote code execution with the web worker's privileges. The fatal backtrace path has confirmed RCE against mod_php. Session lifecycle RCE was validated against mod_php and FPM. Other state families establish security impact only after a concrete producer and consumer are shown.\r\n\r\nThe producer and consumer requests must reach the same worker. Multiple workers and recycling reduce success per request but do not remove the condition.\r\n",
+  "severity": "critical",
+  "author": null,
+  "publisher": {
+    "login": "bukka",
+    "id": 137594,
+    "node_id": "MDQ6VXNlcjEzNzU5NA==",
+    "avatar_url": "https://avatars.githubusercontent.com/u/137594?v=4",
+    "gravatar_id": "",
+    "url": "https://api.github.com/users/bukka",
+    "html_url": "https://github.com/bukka",
+    "followers_url": "https://api.github.com/users/bukka/followers",
+    "following_url": "https://api.github.com/users/bukka/following{/other_user}",
+    "gists_url": "https://api.github.com/users/bukka/gists{/gist_id}",
+    "starred_url": "https://api.github.com/users/bukka/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/bukka/subscriptions",
+    "organizations_url": "https://api.github.com/users/bukka/orgs",
+    "repos_url": "https://api.github.com/users/bukka/repos",
+    "events_url": "https://api.github.com/users/bukka/events{/privacy}",
+    "received_events_url": "https://api.github.com/users/bukka/received_events",
+    "type": "User",
+    "user_view_type": "public",
+    "site_admin": false
+  },
+  "identifiers": [
+    {
+      "value": "GHSA-6wmf-4rv5-p3rp",
+      "type": "GHSA"
+    },
+    {
+      "value": "CVE-2026-109619",
+      "type": "CVE"
+    }
+  ],
+  "state": "published",
+  "created_at": null,
+  "updated_at": "2026-10-21T13:34:13Z",
+  "published_at": "2026-10-21T13:34:13Z",
+  "closed_at": null,
+  "withdrawn_at": null,
+  "submission": null,
+  "vulnerabilities": [
+    {
+      "package": {
+        "ecosystem": "php",
+        "name": "php-src"
+      },
+      "vulnerable_version_range": "< 8.2.35",
+      "patched_versions": "8.2.35",
+      "vulnerable_functions": [
+
+      ]
+    },
+    {
+      "package": {
+        "ecosystem": "php",
+        "name": "php-src"
+      },
+      "vulnerable_version_range": "< 8.3.36",
+      "patched_versions": "8.3.36",
+      "vulnerable_functions": [
+
+      ]
+    },
+    {
+      "package": {
+        "ecosystem": "php",
+        "name": "php-src"
+      },
+      "vulnerable_version_range": "< 8.4.27",
+      "patched_versions": "8.4.27",
+      "vulnerable_functions": [
+
+      ]
+    },
+    {
+      "package": {
+        "ecosystem": "php",
+        "name": "php-src"
+      },
+      "vulnerable_version_range": "< 8.5.12",
+      "patched_versions": "8.5.12",
+      "vulnerable_functions": [
+
+      ]
+    }
+  ],
+  "cvss_severities": {
+    "cvss_v3": {
+      "vector_string": null,
+      "score": null
+    },
+    "cvss_v4": {
+      "vector_string": "CVSS:4.0/AV:N/AC:H/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N",
+      "score": 9.2
+    }
+  },
+  "cwes": [
+    {
+      "cwe_id": "CWE-416",
+      "name": "Use After Free"
+    },
+    {
+      "cwe_id": "CWE-755",
+      "name": "Improper Handling of Exceptional Conditions"
+    },
+    {
+      "cwe_id": "CWE-824",
+      "name": "Access of Uninitialized Pointer"
+    },
+    {
+      "cwe_id": "CWE-1325",
+      "name": "Improperly Controlled Sequential Memory Allocation"
+    },
+    {
+      "cwe_id": "CWE-1419",
+      "name": "Incorrect Initialization of Resource"
+    }
+  ],
+  "cwe_ids": [
+    "CWE-416",
+    "CWE-755",
+    "CWE-824",
+    "CWE-1325",
+    "CWE-1419"
+  ],
+  "credits": [
+    {
+      "login": "sagitzadik-wiz",
+      "type": "reporter"
+    },
+    {
+      "login": "tomash-areion",
+      "type": "reporter"
+    },
+    {
+      "login": "lcfr-hax",
+      "type": "reporter"
+    },
+    {
+      "login": "amyb-oai",
+      "type": "reporter"
+    },
+    {
+      "login": "arnaud-lb",
+      "type": "remediation_developer"
+    },
+    {
+      "login": "iluuu1994",
+      "type": "remediation_developer"
+    },
+    {
+      "login": "bukka",
+      "type": "remediation_developer"
+    },
+    {
+      "login": "ndossche",
+      "type": "remediation_developer"
+    }
+  ],
+  "credits_detailed": [
+    {
+      "user": {
+        "login": "sagitzadik-wiz",
+        "id": 87936429,
+        "node_id": "MDQ6VXNlcjg3OTM2NDI5",
+        "avatar_url": "https://avatars.githubusercontent.com/u/87936429?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/sagitzadik-wiz",
+        "html_url": "https://github.com/sagitzadik-wiz",
+        "followers_url": "https://api.github.com/users/sagitzadik-wiz/followers",
+        "following_url": "https://api.github.com/users/sagitzadik-wiz/following{/other_user}",
+        "gists_url": "https://api.github.com/users/sagitzadik-wiz/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/sagitzadik-wiz/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/sagitzadik-wiz/subscriptions",
+        "organizations_url": "https://api.github.com/users/sagitzadik-wiz/orgs",
+        "repos_url": "https://api.github.com/users/sagitzadik-wiz/repos",
+        "events_url": "https://api.github.com/users/sagitzadik-wiz/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/sagitzadik-wiz/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "type": "reporter",
+      "state": "accepted"
+    },
+    {
+      "user": {
+        "login": "tomash-areion",
+        "id": 77932180,
+        "node_id": "MDQ6VXNlcjc3OTMyMTgw",
+        "avatar_url": "https://avatars.githubusercontent.com/u/77932180?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/tomash-areion",
+        "html_url": "https://github.com/tomash-areion",
+        "followers_url": "https://api.github.com/users/tomash-areion/followers",
+        "following_url": "https://api.github.com/users/tomash-areion/following{/other_user}",
+        "gists_url": "https://api.github.com/users/tomash-areion/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/tomash-areion/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/tomash-areion/subscriptions",
+        "organizations_url": "https://api.github.com/users/tomash-areion/orgs",
+        "repos_url": "https://api.github.com/users/tomash-areion/repos",
+        "events_url": "https://api.github.com/users/tomash-areion/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/tomash-areion/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "type": "reporter",
+      "state": "accepted"
+    },
+    {
+      "user": {
+        "login": "lcfr-hax",
+        "id": 62533238,
+        "node_id": "MDQ6VXNlcjYyNTMzMjM4",
+        "avatar_url": "https://avatars.githubusercontent.com/u/62533238?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/lcfr-hax",
+        "html_url": "https://github.com/lcfr-hax",
+        "followers_url": "https://api.github.com/users/lcfr-hax/followers",
+        "following_url": "https://api.github.com/users/lcfr-hax/following{/other_user}",
+        "gists_url": "https://api.github.com/users/lcfr-hax/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/lcfr-hax/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/lcfr-hax/subscriptions",
+        "organizations_url": "https://api.github.com/users/lcfr-hax/orgs",
+        "repos_url": "https://api.github.com/users/lcfr-hax/repos",
+        "events_url": "https://api.github.com/users/lcfr-hax/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/lcfr-hax/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "type": "reporter",
+      "state": "accepted"
+    },
+    {
+      "user": {
+        "login": "amyb-oai",
+        "id": 256202057,
+        "node_id": "U_kgDOD0VVSQ",
+        "avatar_url": "https://avatars.githubusercontent.com/u/256202057?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/amyb-oai",
+        "html_url": "https://github.com/amyb-oai",
+        "followers_url": "https://api.github.com/users/amyb-oai/followers",
+        "following_url": "https://api.github.com/users/amyb-oai/following{/other_user}",
+        "gists_url": "https://api.github.com/users/amyb-oai/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/amyb-oai/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/amyb-oai/subscriptions",
+        "organizations_url": "https://api.github.com/users/amyb-oai/orgs",
+        "repos_url": "https://api.github.com/users/amyb-oai/repos",
+        "events_url": "https://api.github.com/users/amyb-oai/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/amyb-oai/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "type": "reporter",
+      "state": "accepted"
+    },
+    {
+      "user": {
+        "login": "arnaud-lb",
+        "id": 365207,
+        "node_id": "MDQ6VXNlcjM2NTIwNw==",
+        "avatar_url": "https://avatars.githubusercontent.com/u/365207?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/arnaud-lb",
+        "html_url": "https://github.com/arnaud-lb",
+        "followers_url": "https://api.github.com/users/arnaud-lb/followers",
+        "following_url": "https://api.github.com/users/arnaud-lb/following{/other_user}",
+        "gists_url": "https://api.github.com/users/arnaud-lb/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/arnaud-lb/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/arnaud-lb/subscriptions",
+        "organizations_url": "https://api.github.com/users/arnaud-lb/orgs",
+        "repos_url": "https://api.github.com/users/arnaud-lb/repos",
+        "events_url": "https://api.github.com/users/arnaud-lb/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/arnaud-lb/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "type": "remediation_developer",
+      "state": "accepted"
+    },
+    {
+      "user": {
+        "login": "iluuu1994",
+        "id": 1752683,
+        "node_id": "MDQ6VXNlcjE3NTI2ODM=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/1752683?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/iluuu1994",
+        "html_url": "https://github.com/iluuu1994",
+        "followers_url": "https://api.github.com/users/iluuu1994/followers",
+        "following_url": "https://api.github.com/users/iluuu1994/following{/other_user}",
+        "gists_url": "https://api.github.com/users/iluuu1994/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/iluuu1994/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/iluuu1994/subscriptions",
+        "organizations_url": "https://api.github.com/users/iluuu1994/orgs",
+        "repos_url": "https://api.github.com/users/iluuu1994/repos",
+        "events_url": "https://api.github.com/users/iluuu1994/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/iluuu1994/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "type": "remediation_developer",
+      "state": "accepted"
+    },
+    {
+      "user": {
+        "login": "bukka",
+        "id": 137594,
+        "node_id": "MDQ6VXNlcjEzNzU5NA==",
+        "avatar_url": "https://avatars.githubusercontent.com/u/137594?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/bukka",
+        "html_url": "https://github.com/bukka",
+        "followers_url": "https://api.github.com/users/bukka/followers",
+        "following_url": "https://api.github.com/users/bukka/following{/other_user}",
+        "gists_url": "https://api.github.com/users/bukka/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/bukka/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/bukka/subscriptions",
+        "organizations_url": "https://api.github.com/users/bukka/orgs",
+        "repos_url": "https://api.github.com/users/bukka/repos",
+        "events_url": "https://api.github.com/users/bukka/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/bukka/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "type": "remediation_developer",
+      "state": "accepted"
+    },
+    {
+      "user": {
+        "login": "ndossche",
+        "id": 7771979,
+        "node_id": "MDQ6VXNlcjc3NzE5Nzk=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/7771979?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/ndossche",
+        "html_url": "https://github.com/ndossche",
+        "followers_url": "https://api.github.com/users/ndossche/followers",
+        "following_url": "https://api.github.com/users/ndossche/following{/other_user}",
+        "gists_url": "https://api.github.com/users/ndossche/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/ndossche/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/ndossche/subscriptions",
+        "organizations_url": "https://api.github.com/users/ndossche/orgs",
+        "repos_url": "https://api.github.com/users/ndossche/repos",
+        "events_url": "https://api.github.com/users/ndossche/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/ndossche/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "type": "remediation_developer",
+      "state": "accepted"
+    }
+  ],
+  "collaborating_users": null,
+  "collaborating_teams": null,
+  "private_fork": null,
+  "comments": 7,
+  "cvss": {
+    "vector_string": null,
+    "score": null
+  }
+}
