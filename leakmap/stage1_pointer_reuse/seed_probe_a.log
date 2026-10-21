@@ -1,0 +1,9 @@
+seed,http,latency_s,sess_bytes
+0,200,0.012,0
+1,200,0.004,0
+2,200,0.003,0
+3,200,0.003,0
+poison,500,0.044,262472
+--- poison-phase error.log ---
+[21-Oct-2026 17:05:51 UTC] PHP Fatal error:  Allowed memory size of 16777216 bytes exhausted at /home/wh1t3r0se/php-8.4.4/Zend/zend_string.h:176 (tried to allocate 262208 bytes) in Unknown on line 0
+

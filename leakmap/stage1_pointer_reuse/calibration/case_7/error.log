@@ -1,0 +1,1 @@
+[21-Oct-2026 17:02:41 UTC] PHP Fatal error:  Allowed memory size of 10485760 bytes exhausted at /home/wh1t3r0se/php-8.4.4/Zend/zend_string.h:176 (tried to allocate 262208 bytes) in Unknown on line 0

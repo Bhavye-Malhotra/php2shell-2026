@@ -1,0 +1,10 @@
+CASE-KEYPROBE memory_limit=16M php=debug
+CASE key=4MB nfiles=4 -> HTTP 500 site=zend_string.h:176 tried=4194336
+CASE key=4MB nfiles=12 -> HTTP 500 site=zend_string.h:176 tried=4194336
+CASE key=4MB nfiles=20 -> HTTP 500 site=zend_string.h:176 tried=4194336
+CASE key=8MB nfiles=4 -> HTTP 500 site=rfc1867.c:632 tried=6296371
+CASE key=8MB nfiles=12 -> HTTP 500 site=rfc1867.c:632 tried=6296371
+CASE key=8MB nfiles=20 -> HTTP 500 site=rfc1867.c:632 tried=6296371
+CASE key=12MB nfiles=4 -> HTTP 500 site=rfc1867.c:632 tried=6296371
+CASE key=12MB nfiles=12 -> HTTP 500 site=rfc1867.c:632 tried=6296371
+CASE key=12MB nfiles=20 -> HTTP 500 site=rfc1867.c:632 tried=6296371

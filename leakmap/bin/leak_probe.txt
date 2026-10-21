@@ -1,0 +1,4 @@
+# lldb breakpoint probe for stage1/stage2 campaigns (debug build)
+b -n php_var_serialize_init -C "expression (int)((int)puts(\"==INIT==\"), (int)fflush(stdout))" -C "p ::basic_globals.serialize.level" -C "p ::basic_globals.serialize.data" -C "expression (int)({ unsigned long *sq = (unsigned long *)::basic_globals.serialize.data; int rv = (sq != 0) ? (int)printf(\"STALE %p %lx %lx %lx %lx %lx %lx %lx %lx level=%u\n\", (void *)sq, sq[0], sq[1], sq[2], sq[3], sq[4], sq[5], sq[6], sq[7], ::basic_globals.serialize.level) : 0; (int)fflush(stdout); rv; })" -C "continue"
+b -n php_var_serialize_destroy -C "expression (int)((int)puts(\"==DESTROY==\"), (int)fflush(stdout))" -C "p ::basic_globals.serialize.level" -C "p ::basic_globals.serialize.data" -C "continue"
+b -n _zend_bailout -C "expression (int)((int)puts(\"==BAILOUT==\"), (int)fflush(stdout))" -C "p ::basic_globals.serialize.level" -C "p ::basic_globals.serialize.data" -C "continue"

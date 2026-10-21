@@ -1,0 +1,159 @@
+{
+  "track": "groomed",
+  "n_events": 448,
+  "n_init": 219,
+  "init_level_dist": {
+    "0": 219
+  },
+  "n_bailout": 20,
+  "n_poison_confirmed": 20,
+  "n_staledump": 0,
+  "cycles": [
+    {
+      "cycle": 0,
+      "poison_ptr": "0x00007ffff7a5a9c0",
+      "probe_ptr": null,
+      "probe_level": null,
+      "clash": null
+    },
+    {
+      "cycle": 1,
+      "poison_ptr": "0x00007ffff7a5a9c0",
+      "probe_ptr": null,
+      "probe_level": 0,
+      "clash": null
+    },
+    {
+      "cycle": 2,
+      "poison_ptr": "0x00007ffff7a5a9c0",
+      "probe_ptr": null,
+      "probe_level": null,
+      "clash": null
+    },
+    {
+      "cycle": 3,
+      "poison_ptr": "0x00007ffff7a5a9c0",
+      "probe_ptr": null,
+      "probe_level": 0,
+      "clash": null
+    },
+    {
+      "cycle": 4,
+      "poison_ptr": "0x00007ffff7a5a9c0",
+      "probe_ptr": null,
+      "probe_level": null,
+      "clash": null
+    },
+    {
+      "cycle": 5,
+      "poison_ptr": "0x00007ffff7a5a9c0",
+      "probe_ptr": null,
+      "probe_level": 0,
+      "clash": null
+    },
+    {
+      "cycle": 6,
+      "poison_ptr": "0x00007ffff7a5a9c0",
+      "probe_ptr": null,
+      "probe_level": null,
+      "clash": null
+    },
+    {
+      "cycle": 7,
+      "poison_ptr": "0x00007ffff7a5a9c0",
+      "probe_ptr": null,
+      "probe_level": 0,
+      "clash": null
+    },
+    {
+      "cycle": 8,
+      "poison_ptr": "0x00007ffff7a5a9c0",
+      "probe_ptr": null,
+      "probe_level": null,
+      "clash": null
+    },
+    {
+      "cycle": 9,
+      "poison_ptr": "0x00007ffff7a5a9c0",
+      "probe_ptr": null,
+      "probe_level": 0,
+      "clash": null
+    },
+    {
+      "cycle": 10,
+      "poison_ptr": "0x00007ffff7a5a9c0",
+      "probe_ptr": null,
+      "probe_level": null,
+      "clash": null
+    },
+    {
+      "cycle": 11,
+      "poison_ptr": "0x00007ffff7a5a9c0",
+      "probe_ptr": null,
+      "probe_level": 0,
+      "clash": null
+    },
+    {
+      "cycle": 12,
+      "poison_ptr": "0x00007ffff7a5a9c0",
+      "probe_ptr": null,
+      "probe_level": null,
+      "clash": null
+    },
+    {
+      "cycle": 13,
+      "poison_ptr": "0x00007ffff7a5a9c0",
+      "probe_ptr": null,
+      "probe_level": 0,
+      "clash": null
+    },
+    {
+      "cycle": 14,
+      "poison_ptr": "0x00007ffff7a5a9c0",
+      "probe_ptr": null,
+      "probe_level": null,
+      "clash": null
+    },
+    {
+      "cycle": 15,
+      "poison_ptr": "0x00007ffff7a5a9c0",
+      "probe_ptr": null,
+      "probe_level": 0,
+      "clash": null
+    },
+    {
+      "cycle": 16,
+      "poison_ptr": "0x00007ffff7a5a9c0",
+      "probe_ptr": null,
+      "probe_level": null,
+      "clash": null
+    },
+    {
+      "cycle": 17,
+      "poison_ptr": "0x00007ffff7a5a9c0",
+      "probe_ptr": null,
+      "probe_level": 0,
+      "clash": null
+    },
+    {
+      "cycle": 18,
+      "poison_ptr": "0x00007ffff7a5a9c0",
+      "probe_ptr": null,
+      "probe_level": null,
+      "clash": null
+    },
+    {
+      "cycle": 19,
+      "poison_ptr": "0x00007ffff7a5a9c0",
+      "probe_ptr": null,
+      "probe_level": 0,
+      "clash": null
+    }
+  ],
+  "clash_true": 0,
+  "clash_false": 0,
+  "clash_rate": null,
+  "stale_qword_ptr_fraction": null,
+  "stale_consec_diff_mean": null,
+  "stale_consec_diff_n": 0
+}

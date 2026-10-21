@@ -1,0 +1,5 @@
+PHP 8.4.26 (cli) (built: Oct 21 2026 00:29:56) (NTS)
+Copyright (c) The PHP Group
+Built by https://github.com/docker-library/php
+Zend Engine v4.4.26, Copyright (c) Zend Technologies
+    with Zend OPcache v8.4.26, Copyright (c), by Zend Technologies

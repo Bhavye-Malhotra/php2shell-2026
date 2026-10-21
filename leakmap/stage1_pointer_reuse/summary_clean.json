@@ -1,0 +1,160 @@
+{
+  "track": "clean",
+  "n_events": 428,
+  "n_init": 199,
+  "init_level_dist": {
+    "0": 179,
+    "1": 20
+  },
+  "n_bailout": 20,
+  "n_poison_confirmed": 20,
+  "n_staledump": 20,
+  "cycles": [
+    {
+      "cycle": 0,
+      "poison_ptr": "0x00007ffff7a5a9c0",
+      "probe_ptr": null,
+      "probe_level": null,
+      "clash": null
+    },
+    {
+      "cycle": 1,
+      "poison_ptr": "0x00007ffff7a5a9c0",
+      "probe_ptr": "0x00007ffff7a5a9c0",
+      "probe_level": 1,
+      "clash": true
+    },
+    {
+      "cycle": 2,
+      "poison_ptr": "0x00007ffff7a5a9c0",
+      "probe_ptr": null,
+      "probe_level": null,
+      "clash": null
+    },
+    {
+      "cycle": 3,
+      "poison_ptr": "0x00007ffff7a5a9c0",
+      "probe_ptr": "0x00007ffff7a5a9c0",
+      "probe_level": 1,
+      "clash": true
+    },
+    {
+      "cycle": 4,
+      "poison_ptr": "0x00007ffff7a5a9c0",
+      "probe_ptr": null,
+      "probe_level": null,
+      "clash": null
+    },
+    {
+      "cycle": 5,
+      "poison_ptr": "0x00007ffff7a5a9c0",
+      "probe_ptr": "0x00007ffff7a5a9c0",
+      "probe_level": 1,
+      "clash": true
+    },
+    {
+      "cycle": 6,
+      "poison_ptr": "0x00007ffff7a5a9c0",
+      "probe_ptr": null,
+      "probe_level": null,
+      "clash": null
+    },
+    {
+      "cycle": 7,
+      "poison_ptr": "0x00007ffff7a5a9c0",
+      "probe_ptr": "0x00007ffff7a5a9c0",
+      "probe_level": 1,
+      "clash": true
+    },
+    {
+      "cycle": 8,
+      "poison_ptr": "0x00007ffff7a5a9c0",
+      "probe_ptr": null,
+      "probe_level": null,
+      "clash": null
+    },
+    {
+      "cycle": 9,
+      "poison_ptr": "0x00007ffff7a5a9c0",
+      "probe_ptr": "0x00007ffff7a5a9c0",
+      "probe_level": 1,
+      "clash": true
+    },
+    {
+      "cycle": 10,
+      "poison_ptr": "0x00007ffff7a5a9c0",
+      "probe_ptr": null,
+      "probe_level": null,
+      "clash": null
+    },
+    {
+      "cycle": 11,
+      "poison_ptr": "0x00007ffff7a5a9c0",
+      "probe_ptr": "0x00007ffff7a5a9c0",
+      "probe_level": 1,
+      "clash": true
+    },
+    {
+      "cycle": 12,
+      "poison_ptr": "0x00007ffff7a5a9c0",
+      "probe_ptr": null,
+      "probe_level": null,
+      "clash": null
+    },
+    {
+      "cycle": 13,
+      "poison_ptr": "0x00007ffff7a5a9c0",
+      "probe_ptr": "0x00007ffff7a5a9c0",
+      "probe_level": 1,
+      "clash": true
+    },
+    {
+      "cycle": 14,
+      "poison_ptr": "0x00007ffff7a5a9c0",
+      "probe_ptr": null,
+      "probe_level": null,
+      "clash": null
+    },
+    {
+      "cycle": 15,
+      "poison_ptr": "0x00007ffff7a5a9c0",
+      "probe_ptr": "0x00007ffff7a5a9c0",
+      "probe_level": 1,
+      "clash": true
+    },
+    {
+      "cycle": 16,
+      "poison_ptr": "0x00007ffff7a5a9c0",
+      "probe_ptr": null,
+      "probe_level": null,
+      "clash": null
+    },
+    {
+      "cycle": 17,
+      "poison_ptr": "0x00007ffff7a5a9c0",
+      "probe_ptr": "0x00007ffff7a5a9c0",
+      "probe_level": 1,
+      "clash": true
+    },
+    {
+      "cycle": 18,
+      "poison_ptr": "0x00007ffff7a5a9c0",
+      "probe_ptr": null,
+      "probe_level": null,
+      "clash": null
+    },
+    {
+      "cycle": 19,
+      "poison_ptr": "0x00007ffff7a5a9c0",
+      "probe_ptr": "0x00007ffff7a5a9c0",
+      "probe_level": 1,
+      "clash": true
+    }
+  ],
+  "clash_true": 10,
+  "clash_false": 0,
+  "clash_rate": 1.0,
+  "stale_qword_ptr_fraction": 0.375,
+  "stale_consec_diff_mean": 0.125,
+  "stale_consec_diff_n": 19
+}

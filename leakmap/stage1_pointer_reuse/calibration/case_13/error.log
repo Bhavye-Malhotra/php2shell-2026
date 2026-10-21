@@ -1,0 +1,1 @@
+[21-Oct-2026 17:02:46 UTC] PHP Fatal error:  Allowed memory size of 12582912 bytes exhausted at /home/wh1t3r0se/php-8.4.4/main/rfc1867.c:490 (tried to allocate 262184 bytes) in Unknown on line 0
