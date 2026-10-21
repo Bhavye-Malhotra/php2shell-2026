@@ -1,0 +1,12 @@
+[matrix] matrix start Wed, Oct 21, 2026  3:24:16 PM
+[matrix] === php:8.4.26-cli | VANILLA codec (-d session.serialize_handler=php -d session.upload_progress.cleanup=1) ===
+[matrix] launching php:8.4.26-cli-> ph2s_matrix_vanilla_php_8_4_26-cli on port 21413 with extra args: -d session.serialize_handler=php -d session.upload_progress.cleanup=1
+[matrix]   detector saved: detect_vanilla_php_8_4_26-cli.json (verdict=VULNERABLE)
+[matrix] chain test on ph2s_matrix_vanilla_php_8_4_26-cli (port 21413) [vanilla_php_8_4_26-cli]
+[matrix]   CHAIN_BROKEN=vanilla_php_8_4_26-cli
+[matrix] === php:8.4.26-cli | RECIPE codec (-d session.serialize_handler=php_serialize -d session.upload_progress.cleanup=0) ===
+[matrix] launching php:8.4.26-cli-> ph2s_matrix_recipe_php_8_4_26-cli on port 21370 with extra args: -d session.serialize_handler=php_serialize -d session.upload_progress.cleanup=0
+[matrix]   detector saved: detect_recipe_php_8_4_26-cli.json (verdict=VULNERABLE)
+[matrix] chain test on ph2s_matrix_recipe_php_8_4_26-cli (port 21370) [recipe_php_8_4_26-cli]
+[matrix]   CHAIN_BROKEN=recipe_php_8_4_26-cli
+[matrix] matrix done. results in /e/Code Projects/php2shell-2026/docker/RESULTS

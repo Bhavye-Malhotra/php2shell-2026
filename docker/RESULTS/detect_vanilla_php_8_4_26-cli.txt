@@ -1,0 +1,14 @@
+== php2shell detector (CVE-2026-109618 / CVE-2026-109619) ==
+PHP version:                 8.4.26 (branch 8.4)
+INI memory_hard_limit_percent: ABSENT
+Version map:                 affected-version
+session.upload_progress:     ENABLED (exposure amplifier)
+session.use_strict_mode:     OFF
+fatal_error_backtraces:      n/a (not 8.5+)
+----------------------------------------------------------------
+VERDICT: VULNERABLE
+
+Recommended interim mitigations (per GHSA-w8hw-w9fx-j79w / GHSA-6wmf-4rv5-p3rp):
+  * session.upload_progress.enabled = 0   (remove producer/consumer path)
+  * Keep memory limits finite but soft; do NOT use RLIMIT_AS/RLIMIT_DATA
+  * Patched releases: 8.2.35 / 8.3.36 / 8.4.27 / 8.5.12

@@ -20,6 +20,13 @@ mkdir -p "$OUT"
 # images we probe; override with IMAGE_TAGS="php:8.4.26-cli php:8.4.27-cli" ./run_matrix.sh
 : "${IMAGE_TAGS:=php:8.4.26-cli php:8.4.27-cli}"
 
+PYEXEC=""
+for cand in python py; do
+  if command -v "$cand" >/dev/null 2>&1 && "$cand" -c 'import http.client' >/dev/null 2>&1; then PYEXEC="$cand"; break; fi
+done
+[ -z "$PYEXEC" ] && PYEXEC="wsl -d Arch python3"
+[ "$PYEXEC" = "py" ] && PYEXEC="py -3"
+
 log(){ echo "[matrix] $*" | tee -a "$OUT/matrix.log"; }
 
 docker_stop(){ docker rm -f "$1" >/dev/null 2>&1 || true; }
@@ -27,7 +34,7 @@ docker_stop(){ docker rm -f "$1" >/dev/null 2>&1 || true; }
 chain_test(){ # $1 container-name, $2 tcpport, $3 tag-consolidate-name
   local name="$1" port="$2" tag="$3"
   log "chain test on $name (port $port) [$tag]"
-  python3 "$ROOT/chain_probe.py" "http://127.0.0.1:$port" "/tmp/sess_${name}/sess_vc01" \
+  (cd "$PHP_REPO_ROOT" && $PYEXEC docker/chain_probe.py "http://127.0.0.1:$port" "/tmp/sess_${name}/sess_vc01") \
      > "$OUT/chain_${tag}.log" 2>&1 || true
   if grep -q "CHAIN_WORKS" "$OUT/chain_${tag}.log"; then
     log "  CHAIN_WORKS=$tag"
@@ -38,17 +45,18 @@ chain_test(){ # $1 container-name, $2 tcpport, $3 tag-consolidate-name
 
 detect_test(){
   local name="$1" tag="$2"
-  docker cp "$REPO/php2shell_detect.php" "$name":/tmp/detect.php >/dev/null 2>&1
+  docker exec -i "$name" sh -c 'cat > /tmp/detect.php' < "$PHP_REPO_ROOT/detector/php2shell_detect.php"
   docker exec -t "$name" php /tmp/detect.php --no-exit --json > "$OUT/detect_${tag}.json" 2>/dev/null || true
-  # also save a human variant
   docker exec -t "$name" php /tmp/detect.php --no-exit > "$OUT/detect_${tag}.txt" 2>/dev/null || true
-  log "  detector saved: detect_${tag}.json (verdict=$(python3 -c "import json,sys;d=json.load(open(\"$OUT/detect_${tag}.json\"));print(d.get(\"verdict\"))" 2>/dev/null || echo '?'))"
+  local verdict
+  verdict=$(grep -o '"verdict"[[:space:]]*:[[:space:]]*"[^"]*"' "$OUT/detect_${tag}.json" | tail -1 | sed 's/.*"\([^"]*\)"$/\1/')
+  log "  detector saved: detect_${tag}.json (verdict=${verdict:-?})"
 }
 
 run_case(){ # $1 image, $2 label, $3 codec-args
   local image="$1" label="$2"; shift 2
   local cname="ph2s_matrix_${label}"
-  local port=$(( RANDOM%1000 + PORT_BASE*10 ))
+  local port=$(( RANDOM%2000 + 20000 ))
   docker_stop "$cname"
   log "launching $image-> $cname on port $port with extra args: $*"
   # named-volume so sess_{sid} stays inspectable between steps but host sees nothing

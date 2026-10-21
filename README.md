@@ -10,7 +10,7 @@ Both CVEs are **critical**, fixed in **8.2.35 / 8.3.36 / 8.4.27 / 8.5.12** by co
 |---|---|
 | `php2shell_detect.php` | **On-host definitive probe.** INI-key fingerprint of the fix commit (`memory_hard_limit_percent`) + version map. Verified bidirectionally: VULNERABLE on 8.4.4, PATCHED on 8.4.27. |
 | `detector/detect_remote.py` | Remote banner sniff + consent-gated behavior probe (false-positive-safe verdicts). |
-| `poc/poc_session_include.py` | Working RCE chain PoC: upload_progress KEY-injection → session poisoning → self-include. `[RCE-OUT]` + `id` output demonstrated. Requires `php_serialize` codec + `upload_progress.cleanup=0` (see Codec Note). |
+| `poc/poc_session_include.py` | End-to-end chain demonstrator (upload_progress → session poisoning → `include $_SESSION['page']` → `[RCE-OUT]` marker in HTTP response). **Forensic-honest**: THE single pure-HTTP link — `PHP_SESSION_UPLOAD_PROGRESS` key-suffix forge — is proven to be blocked on BOTH stock codecs (`php` codec: `memchr('|')` → encode NULL → 0-byte file; `php_serialize`: forged suffix lands as one length-bound key that decoders can't split). The chain harness therefore performs that one link locally (byte-craft of the forged page variable into the sess file, sanctioned and documented in `poc/PROOFS_session_include.md`), and all remaining steps execute remotely over HTTP. |
 | `poc/xdos_crossworker.py` | Working cross-worker DoS: worker A poisoned → leaked flock file-write on victim session file (`/proc/locks` evidence) → worker B hangs >12 s on the same SID. |
 | `WRITEUP.md` / `ADDENDUM.md` / `SECURITY.md` / `PHP2SHELL-RESEARCH-REPORT.md` | Pre-release verification, official advisory delta, verbatim GHSAs, incident research. |
 | `lab/`, `evidence/` | Build scripts, gdb/lldb probes, all raw evidence: 1,213-line lldb trace, 686 KB fix diff, advisory JSONs, flock transcripts, detector verify-on-both-builds transcripts. |
@@ -23,17 +23,26 @@ python3 detector/detect_remote.py http://target/   # banner sniff only
 python3 detector/detect_remote.py http://target/ --i-own-this-target  # + behavior probe
 ```
 
-## Codec Note (critical read)
+## Codec Note (critical read — verified in Docker, php:8.4.26-cli)
 
-The classic `PHP_SESSION_UPLOAD_PROGRESS` key-suffix forge assumes the `php`
-session codec. **In stock 8.4.4 the `php` codec rejects any key containing `|`**
-(`memchr` at `ext/session/session.c:1061`): the entire encode returns NULL,
-the file write is truncated to zero — so the forge as commonly described *cannot
-persist* on stock PHP's default codec. A working chain on the unpatched binary
-must use `session.serialize_handler=php_serialize` (which has no `|`-rejection)
-plus `session.upload_progress.cleanup=0` (prevents the progress key from being
-deleted at EVENT_END). A Docker-vs-vanilla test matrix covering this is in
-`docker/`.
+The classic `PHP_SESSION_UPLOAD_PROGRESS` key-suffix forge assumes text-level
+injection into the session file. **Verified on stock 8.4.26-cli in this repo's
+Docker matrix: the pure-HTTP form of that forge does not survive on ANY stock
+session codec:**
+
+- `php` codec (the DEFAULT): any `|` in a session-map key causes the sess encode
+  to return NULL (`memchr(key, '|')` at `ext/session/session.c:1061`). The write
+  becomes a 0-byte truncation, and any prior progress content disappears — that
+  also zeroed the "empty sess file" symptom every pre-release blog discusses.
+- `php_serialize` codec (non-default but documented workaround): the wire format
+  is one `a:N:{...}` propertied container; a forged suffix becomes a SINGLE long
+  KEY — length-bound, not resolvable into an independent `page` variable at decode.
+
+So: attacker-plausible chain delivery on the vanilla stack now passes through
+`$_SESSION['page']`-injection in `poc/poc_session_include.py` via a LOCAL forge
+(POC-side, documented as such). This matches the vendor's own framing that
+operationally clean RCE is grooming-dependent; nobody with a pure-HTTP demo
+contradicts it silently. See `docker/README.md` for the matrix.
 
 ## Status notes
 

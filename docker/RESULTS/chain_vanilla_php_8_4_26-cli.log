@@ -1,0 +1,9 @@
+[chain] inject=b'x|a:0:{};page|s:54:"/tmp/sess_ph2s_matrix_vanilla_php_8_4_26-cli/sess_vc01";'
+[chain] req1 -> 200
+[chain] req2 -> 200
+[chain] req3 -> HTTP 200
+--- body begin ---
+NO_PAGE
+
+--- body end ---
+[chain] CHAIN_BROKEN_NO_PAGE
