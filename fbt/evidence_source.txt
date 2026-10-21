@@ -1,0 +1,73 @@
+=== SOURCE EVIDENCE — php-src tag php-8.5.11 (fetched raw from github) ===
+
+--- [S1] capture: Zend/zend.c:1524-1527 (zend_error_zstr_at)
+		}
+	} else if (EG(fatal_error_backtrace_on) && (type & E_FATAL_ERRORS)) {
+		zend_fetch_debug_backtrace(&EG(last_fatal_error_backtrace), 0, EG(exception_ignore_args) ? DEBUG_BACKTRACE_IGNORE_ARGS : 0, 0);
+	}
+
+--- [S2] missed reset: Zend/zend_execute_API.c:281 (!fast_shutdown guard), 308-310 (dtor+UNDEF)
+
+	if (!fast_shutdown) {
+   ...
+
+		zval_ptr_dtor(&EG(last_fatal_error_backtrace));
+		ZVAL_UNDEF(&EG(last_fatal_error_backtrace));
+
+
+--- [S3] fast_shutdown default: Zend/zend_execute_API.c:445-447
+#else
+	bool fast_shutdown = is_zend_mm() && !EG(full_tables_cleanup);
+#endif
+
+--- [S4] per-request init reset: Zend/zend_execute_API.c:139 (init_executor)
+
+	ZVAL_UNDEF(&EG(last_fatal_error_backtrace));
+
+
+--- [S5] pre-init consumer path: Zend/zend.c:1499-1502 (Always clear -> stale dtor)
+
+	// Always clear the last backtrace.
+	zval_ptr_dtor(&EG(last_fatal_error_backtrace));
+	ZVAL_UNDEF(&EG(last_fatal_error_backtrace));
+
+
+--- [S6] print/consume site: main/main.c:1388-1391 (php_error_cb)
+
+	if (!Z_ISUNDEF(EG(last_fatal_error_backtrace))) {
+		backtrace = zend_trace_to_string(Z_ARRVAL(EG(last_fatal_error_backtrace)), /* include_main */ true);
+	}
+
+--- [S7] pre-init warning source: Zend/zend_ini.c:864-866
+	if (errstr) {
+		zend_error(E_WARNING, "Invalid \"%s\" setting. %s", ZSTR_VAL(setting), ZSTR_VAL(errstr));
+		zend_string_release(errstr);
+
+--- [S8] htaccess application timing: sapi/apache2handler/apache_config.c:197-202 (apply_config)
+
+	ZEND_HASH_MAP_FOREACH_STR_KEY_PTR(&d->config, str, data) {
+		phpapdebug((stderr, "APPLYING (%s)(%s)\n", ZSTR_VAL(str), data->value));
+		if (zend_alter_ini_entry_chars(str, data->value, data->value_len, data->status, data->htaccess?PHP_INI_STAGE_HTACCESS:PHP_INI_STAGE_ACTIVATE) == FAILURE) {
+			phpapdebug((stderr, "..FAILED\n"));
+		}
+
+--- [S9] memory_limit validator: main/main.c:331-336 (OnChangeMemoryLimit)
+static PHP_INI_MH(OnChangeMemoryLimit)
+{
+	size_t value;
+	if (new_value) {
+		value = zend_ini_parse_uquantity_warn(new_value, entry->name);
+	} else {
+		value = Z_L(1)<<30;		/* effectively, no limit */
+
+=== ABSENCE EVIDENCE — php-src tag php-8.4.27 (local checkout) ===
+commit 00d8bae801541db0d95a698e108bb4b1b273fe6e
+grep -rn 'fatal_error_backtraces' .  => 0 hits
+grep -n 'backtrace' main/main.c      => 0 hits
+grep -n 'last_fatal_error' Zend/zend_globals.h => 0 hits
+
+=== 8.5.12RC1 comparison (same raw fetch) ===
+Zend/zend_execute_API.c in php-8.5.12RC1 still guards the dtor behind !fast_shutdown:
+139:	ZVAL_UNDEF(&EG(last_fatal_error_backtrace));
+309:		zval_ptr_dtor(&EG(last_fatal_error_backtrace));
+310:		ZVAL_UNDEF(&EG(last_fatal_error_backtrace));

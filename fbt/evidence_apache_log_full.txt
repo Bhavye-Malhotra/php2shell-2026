@@ -1,0 +1,7 @@
+AH00558: apache2: Could not reliably determine the server's fully qualified domain name, using 172.17.0.6. Set the 'ServerName' directive globally to suppress this message
+AH00558: apache2: Could not reliably determine the server's fully qualified domain name, using 172.17.0.6. Set the 'ServerName' directive globally to suppress this message
+[Wed Oct 21 16:01:36.556694 2026] [mpm_prefork:notice] [pid 1:tid 1] AH00163: Apache/2.4.69 (Debian) PHP/8.5.11 configured -- resuming normal operations
+[Wed Oct 21 16:01:36.556766 2026] [core:notice] [pid 1:tid 1] AH00094: Command line: 'apache2 -D FOREGROUND'
+172.17.0.1 - - [21/Oct/2026:16:01:37 +0000] "GET /fatal.php HTTP/1.1" 200 728 "-" "curl/8.23.0"
+[Wed Oct 21 16:01:37.557947 2026] [mpm_prefork:error] [pid 1:tid 1] AH00161: server reached MaxRequestWorkers setting, consider raising the MaxRequestWorkers setting
+[Wed Oct 21 16:01:37.558034 2026] [core:notice] [pid 1:tid 1] AH00052: child pid 17 exit signal Segmentation fault (11)

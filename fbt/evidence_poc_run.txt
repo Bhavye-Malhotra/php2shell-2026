@@ -1,0 +1,33 @@
+[*] engine sanity (mod_php + prefork + fbt default On):
+     mpm_prefork_module (shared)
+     php_module (shared)
+    fatal_error_backtraces=1 display_errors=1
+[*] CONTROL (4 pristine cycles, .htaccess absent — no pre-init trigger):
+    cycle 1: R2=ok crashes=0
+    cycle 2: R2=ok crashes=0
+    cycle 3: R2=ok crashes=0
+    cycle 4: R2=ok crashes=0
+[*] ATTACK (4 pristine cycles, .htaccess invalid-quantity trigger):
+    cycle 1: R2=LOST crashes=1
+    cycle 2: R2=LOST crashes=1
+    cycle 3: R2=LOST crashes=1
+    cycle 4: R2=LOST crashes=1
+
+[*] re-run attack boot to display artifacts:
+    -- producer capture pipeline (R1 fatal response):
+       <b>Fatal error</b>:  fbt producer death: FBTLEAK-MARKER-2421 in <b>/var/www/html/fatal.php</b> on line <b>10</b><br />
+       Stack trace:
+       #0 /var/www/html/fatal.php(10): trigger_error('fbt producer de...', 256)
+       #1 /var/www/html/fatal.php(9): fbt_inner(Array)
+       #2 /var/www/html/fatal.php(8): fbt_outer(Array)
+       #3 {main}
+    -- consumer pre-init trigger (attribution, see evidence_attribution.txt):
+       .htaccess '' / comment-only / valid php_value  => 0 crashes (no pre-init zend_error)
+       .htaccess php_value memory_limit not_a_quantity => crash (pre-init E_WARNING)
+       (warning text routing to stderr/response varies per child state; the
+        zend_error CALL itself is what is proven by the differential below)
+    -- AH00052 from Apache parent (R2 pre-init UAF):
+       [Wed Oct 21 16:09:07.736428 2026] [core:notice] [pid 1:tid 1] AH00052: child pid 17 exit signal Segmentation fault (11)
+
+control crashes: 0 / 4   |   attack crashes: 4 / 4
+[+] PROVEN: state miss reproduced — stale fbt backtrace dtor'd pre-init on the next request (mod_php UAF/worker kill), control clean.
